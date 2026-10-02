@@ -208,7 +208,7 @@ function App() {
                     </div>
                   ) : null
                   <div className="media-shade" />
-                  <span className="media-index">۰{index + 1}</span>
+                  <span className="media-index">۰{index + ۱}</span>
                   <span className="media-label">{product.imageLabel}</span>
                   {product.badge && <span className="card-badge">{product.badge}</span>}
                 </div>
