@@ -69,7 +69,8 @@ export default async function handler(req, res) {
     })
 
     if (!telegramResponse.ok) {
-      console.error('Telegram delivery failed with status:', telegramResponse.status)
+      const telegramError = await telegramResponse.text()
+      console.error('Telegram delivery failed:', telegramResponse.status, telegramError)
       return json(res, 502, { error: 'ارسال سفارش انجام نشد.' })
     }
 
