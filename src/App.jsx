@@ -15,9 +15,10 @@ const products = [
     description: 'دسترسی حرفه‌ای به اکوسیستم هوش مصنوعی گوگل، بدون Google Flow.',
     featured: false,
     badge: 'اقتصادی',
-    image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1200&q=85',
-    imageAlt: 'نمای انتزاعی و آینده‌نگر از فناوری هوش مصنوعی',
-    imageLabel: 'AI PRO / FAMILY',
+    image: null,
+    imageAlt: 'لوگوی Gemini روی پس‌زمینه گرادیانی',
+    imageLabel: 'GEMINI / FAMILY',
+    visual: 'gemini',
     features: [
       'دسترسی کامل به Gemini و مدل‌های پیشرفته',
       'تولید تصویر، ویدیو و موسیقی',
@@ -37,9 +38,10 @@ const products = [
     description: 'فعال‌سازی اختصاصی با Google Flow و اعتبار ماهانه برای تجربه کامل‌تر.',
     featured: true,
     badge: 'پیشنهاد ویژه',
-    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=85',
-    imageAlt: 'نمای نزدیک از یک برد الکترونیکی پیشرفته',
-    imageLabel: 'AI PRO / EXCLUSIVE',
+    image: null,
+    imageAlt: 'لوگوی Gemini روی پس‌زمینه گرادیانی',
+    imageLabel: 'GEMINI / EXCLUSIVE',
+    visual: 'gemini',
     features: [
       'تمام امکانات Google AI Pro',
       'دسترسی به Google Flow',
@@ -185,8 +187,26 @@ function App() {
           <div className="product-grid">
             {products.map((product, index) => (
               <article className={`product-card ${product.featured ? 'featured' : ''}`} key={product.id}>
-                <div className="product-media">
-                  <img src={product.image} alt={product.imageAlt} loading={index > 1 ? 'lazy' : 'eager'} />
+                <div className={`product-media ${product.visual ? `visual-${product.visual}` : ''}`}>
+                  {product.image ? (
+                    <img src={product.image} alt={product.imageAlt} loading={index > 1 ? 'lazy' : 'eager'} />
+                  ) : product.visual === 'gemini' ? (
+                    <div className="gemini-product-visual" role="img" aria-label={product.imageAlt}>
+                      <div className="gemini-glow gemini-glow-one" />
+                      <div className="gemini-glow gemini-glow-two" />
+                      <svg className="gemini-logo" viewBox="0 0 100 100" aria-hidden="true">
+                        <defs>
+                          <linearGradient id={'gemini-gradient-' + product.id} x1="18" y1="82" x2="82" y2="18" gradientUnits="userSpaceOnUse">
+                            <stop offset="0" stopColor="#5B5CE2" />
+                            <stop offset=".48" stopColor="#8A63E8" />
+                            <stop offset="1" stopColor="#4AA8FF" />
+                          </linearGradient>
+                        </defs>
+                        <path fill={'url(#gemini-gradient-' + product.id + ')'} d="M50 4C55 30 70 45 96 50 70 55 55 70 50 96 45 70 30 55 4 50 30 45 45 30 50 4Z" />
+                      </svg>
+                      <div className="gemini-wordmark">GEMINI</div>
+                    </div>
+                  ) : null
                   <div className="media-shade" />
                   <span className="media-index">۰{index + ۱}</span>
                   <span className="media-label">{product.imageLabel}</span>
