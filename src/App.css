@@ -371,3 +371,42 @@ main,.footer{position:relative;z-index:1}
 .feature span{color:#7358dd}
 .featured .feature span{color:#a982ff}
 .faq-list summary::before{color:#7358dd}
+
+
+/* Desktop product catalog sizing */
+@media (min-width: 851px) {
+  .product-grid {
+    max-width: 1060px;
+    margin-inline: auto;
+  }
+
+  .product-media {
+    height: 200px;
+  }
+
+  .product-content {
+    padding: 22px 24px 24px;
+  }
+
+  .product-card h3 {
+    margin-top: 14px;
+    font-size: 23px;
+  }
+
+  .price {
+    margin: 20px 0 17px;
+  }
+
+  .price strong {
+    font-size: 27px;
+  }
+
+  .feature-list {
+    gap: 7px;
+    margin-bottom: 21px;
+  }
+
+  .feature {
+    font-size: 10.5px;
+  }
+}
