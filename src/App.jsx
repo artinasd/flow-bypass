@@ -206,7 +206,7 @@ function App() {
                       </svg>
                       <div className="gemini-wordmark">GEMINI</div>
                     </div>
-                  ) : null
+                  ) : null}
                   <div className="media-shade" />
                   <span className="media-index">۰{index + ۱}</span>
                   <span className="media-label">{product.imageLabel}</span>
