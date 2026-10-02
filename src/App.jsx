@@ -1,16 +1,23 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
+/*
+  Add future products by copying an object below.
+  The storefront, card layout, image treatment and order flow are generated from this data.
+*/
 const products = [
   {
     id: 'google-ai-pro-family',
-    eyebrow: 'Google AI Pro',
+    eyebrow: 'GOOGLE AI PRO',
+    category: 'AI SUBSCRIPTION',
     name: 'اشتراک خانوادگی',
     price: 250000,
-    priceLabel: '۲۵۰ هزار تومان',
     description: 'دسترسی حرفه‌ای به اکوسیستم هوش مصنوعی گوگل، بدون Google Flow.',
     featured: false,
     badge: 'اقتصادی',
+    image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1200&q=85',
+    imageAlt: 'نمای انتزاعی و آینده‌نگر از فناوری هوش مصنوعی',
+    imageLabel: 'AI PRO / FAMILY',
     features: [
       'دسترسی کامل به Gemini و مدل‌های پیشرفته',
       'تولید تصویر، ویدیو و موسیقی',
@@ -23,13 +30,16 @@ const products = [
   },
   {
     id: 'google-ai-pro-exclusive',
-    eyebrow: 'Google AI Pro',
+    eyebrow: 'GOOGLE AI PRO',
+    category: 'AI SUBSCRIPTION',
     name: 'فعال‌سازی اختصاصی',
     price: 600000,
-    priceLabel: '۶۰۰ هزار تومان',
     description: 'فعال‌سازی اختصاصی با Google Flow و اعتبار ماهانه برای تجربه کامل‌تر.',
     featured: true,
     badge: 'پیشنهاد ویژه',
+    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=85',
+    imageAlt: 'نمای نزدیک از یک برد الکترونیکی پیشرفته',
+    imageLabel: 'AI PRO / EXCLUSIVE',
     features: [
       'تمام امکانات Google AI Pro',
       'دسترسی به Google Flow',
@@ -56,9 +66,26 @@ function App() {
     [selectedProduct, quantity],
   )
 
+  useEffect(() => {
+    if (!selectedProduct) return undefined
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape' && status !== 'sending') setSelectedProduct(null)
+    }
+
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKeyDown)
+
+    return () => {
+      document.body.style.overflow = ''
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [selectedProduct, status])
+
   const openOrder = (product) => {
     setSelectedProduct(product)
     setQuantity(1)
+    setForm({ name: '', company: '', phone: '', email: '', notes: '' })
     setStatus('idle')
   }
 
@@ -82,12 +109,7 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customer: form,
-          items: [
-            {
-              productId: selectedProduct.id,
-              quantity,
-            },
-          ],
+          items: [{ productId: selectedProduct.id, quantity }],
         }),
       })
 
@@ -141,8 +163,8 @@ function App() {
             <div className="orb orb-one" />
             <div className="orb orb-two" />
             <div className="hero-panel">
-              <div className="panel-top"><span>GOOGLE AI PRO</span><span className="live-dot">● LIVE</span></div>
-              <div className="panel-title">یک اشتراک،<br /><strong>یک اکوسیستم کامل.</strong></div>
+              <div className="panel-top"><span>AI / CATALOG</span><span className="live-dot">● AVAILABLE</span></div>
+              <div className="panel-title">ابزارهای درست،<br /><strong>برای کارهای بزرگ.</strong></div>
               <div className="panel-grid">
                 <span>Gemini</span><span>Flow</span><span>Jules</span><span>NotebookLM</span>
               </div>
@@ -154,34 +176,46 @@ function App() {
         <section className="section products-section" id="products">
           <div className="section-heading">
             <div>
-              <span className="section-kicker">محصولات</span>
-              <h2>اشتراک مناسب خودت را انتخاب کن.</h2>
+              <span className="section-kicker">محصولات / {String(products.length).padStart(2, '۰')}</span>
+              <h2>ابزار مناسب خودت را انتخاب کن.</h2>
             </div>
-            <p>بدون حساب کاربری و مراحل اضافه. محصول را انتخاب کنید، درخواست را ثبت کنید و ادامه کار را به ما بسپارید.</p>
+            <p>محصولات را با تصویر و مشخصات مقایسه کنید. محصول جدید هم فقط با اضافه‌کردن یک آیتم به لیست بالا وارد فروشگاه می‌شود.</p>
           </div>
 
           <div className="product-grid">
-            {products.map((product) => (
+            {products.map((product, index) => (
               <article className={`product-card ${product.featured ? 'featured' : ''}`} key={product.id}>
-                {product.badge && <div className="card-badge">{product.badge}</div>}
-                <div className="product-top">
-                  <div className="product-icon">G</div>
-                  <span className="product-eyebrow">{product.eyebrow}</span>
+                <div className="product-media">
+                  <img src={product.image} alt={product.imageAlt} loading={index > 1 ? 'lazy' : 'eager'} />
+                  <div className="media-shade" />
+                  <span className="media-index">۰{index + ۱}</span>
+                  <span className="media-label">{product.imageLabel}</span>
+                  {product.badge && <span className="card-badge">{product.badge}</span>}
                 </div>
-                <h3>{product.name}</h3>
-                <p className="product-description">{product.description}</p>
-                <div className="price">
-                  <strong>{formatPrice(product.price)}</strong>
-                  <span>تومان</span>
+
+                <div className="product-content">
+                  <div className="product-meta">
+                    <span>{product.eyebrow}</span>
+                    <span>{product.category}</span>
+                  </div>
+                  <h3>{product.name}</h3>
+                  <p className="product-description">{product.description}</p>
+
+                  <div className="price">
+                    <strong>{formatPrice(product.price)}</strong>
+                    <span>تومان</span>
+                  </div>
+
+                  <div className="feature-list">
+                    {product.features.map((feature) => (
+                      <div className="feature" key={feature}><span>✓</span>{feature}</div>
+                    ))}
+                  </div>
+
+                  <button className="purchase-button" onClick={() => openOrder(product)}>
+                    سفارش این اشتراک <span>←</span>
+                  </button>
                 </div>
-                <div className="feature-list">
-                  {product.features.map((feature) => (
-                    <div className="feature" key={feature}><span>✓</span>{feature}</div>
-                  ))}
-                </div>
-                <button className="purchase-button" onClick={() => openOrder(product)}>
-                  سفارش این اشتراک <span>←</span>
-                </button>
               </article>
             ))}
           </div>
@@ -221,13 +255,14 @@ function App() {
         <div className="modal-backdrop" role="presentation" onMouseDown={closeOrder}>
           <section className="order-modal" role="dialog" aria-modal="true" aria-labelledby="order-title" onMouseDown={(event) => event.stopPropagation()}>
             <button className="close-button" onClick={closeOrder} aria-label="بستن">×</button>
+
             {status === 'success' ? (
               <div className="success-state">
                 <div className="success-icon">✓</div>
                 <span className="section-kicker">درخواست دریافت شد</span>
                 <h2>سفارش شما ثبت شد.</h2>
                 <p>اطلاعات سفارش برای ما ارسال شد. برای هماهنگی پرداخت و تحویل، با شما تماس خواهیم گرفت.</p>
-                <button className="purchase-button" onClick={() => setSelectedProduct(null)}>بازگشت به محصولات</button>
+                <button className="purchase-button" onClick={closeOrder}>بازگشت به محصولات</button>
               </div>
             ) : (
               <>
@@ -247,20 +282,20 @@ function App() {
                     <label htmlFor="quantity">تعداد اشتراک</label>
                     <div className="quantity-control">
                       <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} aria-label="کاهش تعداد">−</button>
-                      <strong>{formatPrice(quantity)}</strong>
+                      <strong id="quantity">{formatPrice(quantity)}</strong>
                       <button type="button" onClick={() => setQuantity((value) => Math.min(99, value + 1))} aria-label="افزایش تعداد">+</button>
                     </div>
                   </div>
 
                   <div className="form-grid">
-                    <label>نام و نام خانوادگی<input value={form.name} onChange={(e) => updateField('name', e.target.value)} required /></label>
-                    <label>نام کسب‌وکار<input value={form.company} onChange={(e) => updateField('company', e.target.value)} /></label>
-                    <label>شماره تماس<input dir="ltr" inputMode="tel" value={form.phone} onChange={(e) => updateField('phone', e.target.value)} required /></label>
-                    <label>ایمیل<input dir="ltr" type="email" value={form.email} onChange={(e) => updateField('email', e.target.value)} /></label>
+                    <label>نام و نام خانوادگی<input value={form.name} onChange={(e) => updateField('name', e.target.value)} autoComplete="name" required /></label>
+                    <label>نام کسب‌وکار <span className="optional">اختیاری</span><input value={form.company} onChange={(e) => updateField('company', e.target.value)} autoComplete="organization" /></label>
+                    <label>شماره تماس<input dir="ltr" inputMode="tel" value={form.phone} onChange={(e) => updateField('phone', e.target.value)} autoComplete="tel" required /></label>
+                    <label>ایمیل <span className="optional">اختیاری</span><input dir="ltr" type="email" value={form.email} onChange={(e) => updateField('email', e.target.value)} autoComplete="email" /></label>
                   </div>
-                  <label>توضیحات یا درخواست خاص<textarea value={form.notes} onChange={(e) => updateField('notes', e.target.value)} rows="3" /></label>
+                  <label>توضیحات یا درخواست خاص <span className="optional">اختیاری</span><textarea value={form.notes} onChange={(e) => updateField('notes', e.target.value)} rows="3" /></label>
 
-                  {status === 'error' && <div className="form-error">ارسال سفارش انجام نشد. لطفاً دوباره تلاش کنید.</div>}
+                  {status === 'error' && <div className="form-error" role="alert">ارسال سفارش انجام نشد. لطفاً دوباره تلاش کنید.</div>}
 
                   <div className="submit-row">
                     <div><span>مجموع</span><strong>{formatPrice(total)} تومان</strong></div>
