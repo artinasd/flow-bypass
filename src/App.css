@@ -346,3 +346,28 @@ main,.footer{position:relative;z-index:1}
 .gemini-wordmark{position:absolute;z-index:2;bottom:20px;left:22px;color:rgba(255,255,255,.9);font:700 9px system-ui,sans-serif;letter-spacing:3px}
 @keyframes gemini-float{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-5px) rotate(2deg)}}
 @media (prefers-reduced-motion:reduce){.gemini-logo{animation:none}}
+
+/* Theme overrides */
+.nav-cta{border-color:#e1d9f5;background:rgba(255,255,255,.8)}
+.brand-mark{background:linear-gradient(135deg,#4b45d9,#9b6bea,#5ca8ff);box-shadow:0 7px 18px rgba(105,77,218,.24)}
+.brand-dot{color:#765be5}
+.nav-links{color:#69637d}
+.nav-links a:hover,.text-button:hover{color:#5c4fd1}
+.eyebrow,.section-kicker{color:#7059d9}
+.eyebrow-dot{background:#7059d9}
+.hero h1 em,.why-intro h2 em{background:linear-gradient(90deg,#5f4bd8,#a66be8,#4c9df4);-webkit-background-clip:text;background-clip:text;color:transparent}
+.primary-button,.purchase-button{background:linear-gradient(135deg,#5b4bd7,#7a5be0)}
+.primary-button:hover,.purchase-button:hover{background:linear-gradient(135deg,#4d3fc5,#6b4fd0)}
+.orb-one{background:radial-gradient(circle at 35% 30%,#d8c9ff 0,#9c7bea 34%,#6d6be8 58%,#c7b8ff 100%);opacity:.72}
+.orb-two{background:radial-gradient(circle,#a7d7ff,#9e8bed 58%,#eee7ff);opacity:.65}
+.hero-panel{background:linear-gradient(145deg,rgba(255,255,255,.82),rgba(244,239,255,.66))}
+.live-dot{color:#6f59dc}
+.panel-grid span{background:rgba(255,255,255,.68)}
+.products-section,.why-section,.faq,.footer{border-color:#e4def4}
+.section-heading>p,.hero-text,.product-description,.benefit p,.faq-list p{color:#716b84}
+.product-card{background:rgba(255,255,255,.9);border-color:#e2daf3}
+.product-card.featured{background:linear-gradient(145deg,#201744,#16112e 62%,#24174d);border-color:#2d2160}
+.card-badge{background:linear-gradient(135deg,#7154dc,#a167e8)}
+.feature span{color:#7358dd}
+.featured .feature span{color:#a982ff}
+.faq-list summary::before{color:#7358dd}
