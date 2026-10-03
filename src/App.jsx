@@ -257,6 +257,7 @@ function App() {
                 />
               ))}
             </div>
+          </div>
         </section>
 
         <section className="principles-section">
