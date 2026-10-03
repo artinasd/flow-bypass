@@ -247,15 +247,46 @@ function App() {
               <span className="section-index">02</span>
             </div>
 
-            <div className="product-list">
-              {products.map((product, index) => (
-                <ProductShowcase
-                  key={product.id}
-                  product={product}
-                  index={index}
-                  onOrder={openOrder}
-                />
-              ))}
+            <div className="product-systems">
+              {['google', 'chatgpt'].map((accent, systemIndex) => {
+                const systemProducts = products.filter((product) => product.accent === accent)
+                const provider = systemProducts[0]?.provider
+                return (
+                  <section className={'product-system product-system-' + accent} key={accent}>
+                    <div className="system-canvas">
+                      <div className="system-canvas-grid" aria-hidden="true" />
+                      <span className="system-index">SYSTEM / {String(systemIndex + 1).padStart(2, '0')}</span>
+                      <div className="system-core">
+                        <span>{systemProducts[0]?.providerMark}</span>
+                        <strong>{provider}</strong>
+                        <small>{accent === 'google' ? 'AI ECOSYSTEM' : 'AI WORKSPACE'}</small>
+                      </div>
+                      <div className="system-orbit system-orbit-a" aria-hidden="true" />
+                      <div className="system-orbit system-orbit-b" aria-hidden="true" />
+                      <div className="system-node node-a">{accent === 'google' ? 'GEMINI' : 'CHAT'}</div>
+                      <div className="system-node node-b">{accent === 'google' ? 'FLOW' : 'REASON'}</div>
+                      <div className="system-node node-c">{accent === 'google' ? 'JULES' : 'CREATE'}</div>
+                      <div className="system-node node-d">{accent === 'google' ? 'NOTEBOOKLM' : 'PLUS'}</div>
+                    </div>
+
+                    <div className="system-offers">
+                      <div className="system-heading">
+                        <span>{provider}</span>
+                        <span>{String(systemProducts.length).padStart(2, '0')} OFFERS</span>
+                      </div>
+                      {systemProducts.map((product, productIndex) => (
+                        <ProductOffer
+                          key={product.id}
+                          product={product}
+                          index={productIndex}
+                          systemIndex={systemIndex}
+                          onOrder={openOrder}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )
+              })}
             </div>
           </div>
         </section>
@@ -381,67 +412,36 @@ function App() {
   )
 }
 
-function ProductShowcase({ product, index, onOrder }) {
+function ProductOffer({ product, index, systemIndex, onOrder }) {
   return (
-    <article className={'product-showcase product-showcase-' + index}>
-      <div className={'product-visual product-visual-' + product.accent}>
-        <div className="product-visual-top">
-          <span>{String(index + 1).padStart(2, '0')}</span>
-          <span>{product.category}</span>
-        </div>
-        <div className="product-brand-mark">{product.providerMark}</div>
-        <div className="product-visual-name">{product.provider}</div>
-        <div className="product-visual-line" />
-        <span className="product-visual-caption">{product.featured ? 'FULL ACCESS / 01' : 'ESSENTIAL ACCESS / 01'}</span>
-        <div className="visual-stack" aria-hidden="true">
-          {product.accent === 'google' ? (
-            <>
-              <span>GEMINI</span><span>FLOW</span><span>JULES</span><span>NOTEBOOKLM</span>
-            </>
-          ) : (
-            <>
-              <span>CHAT</span><span>REASON</span><span>CREATE</span><span>PLUS</span>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="product-info">
+    <article className={'product-offer product-offer-' + product.accent}>
+      <div className="offer-number">{String(index + 1).padStart(2, '0')}</div>
+      <div className="offer-main">
         <div className="product-meta">
-          <span>{product.provider}</span>
           <span>{product.badge}</span>
+          <span>{product.featured ? 'FEATURED' : 'STANDARD'}</span>
         </div>
         <h3>{product.name}</h3>
         <p>{product.description}</p>
-
-        <div className="feature-rows">
-          {product.features.slice(0, 6).map((feature, featureIndex) => (
-            <div key={feature}>
-              <span className="feature-number">{String(featureIndex + 1).padStart(2, '0')}</span>
-              <Check size={15} />
-              <span>{feature}</span>
-            </div>
+        <div className="offer-features">
+          {product.features.slice(0, 4).map((feature, featureIndex) => (
+            <span key={feature}><b>{String(featureIndex + 1).padStart(2, '0')}</b>{feature}</span>
           ))}
         </div>
-
-        <div className="product-buy">
-          <div>
-            <span>قیمت / واحد</span>
-            <strong>{formatMoney(product)}</strong>
-          </div>
-          <button className="button button-dark" onClick={() => onOrder(product)}>
-            {product.featured ? 'فعال‌سازی' : 'ثبت سفارش'}
-            <ArrowLeft size={17} />
-          </button>
-        </div>
-        <div className="product-footnote">
-          <span>DIRECT REQUEST</span>
-          <span>{String(index + 1).padStart(2, '0')} / {String(products.length).padStart(2, '0')}</span>
-        </div>
+      </div>
+      <div className="offer-action">
+        <span>PRICE</span>
+        <strong>{formatMoney(product)}</strong>
+        <button className="button button-dark" onClick={() => onOrder(product)}>
+          {product.featured ? 'فعال‌سازی' : 'ثبت سفارش'}
+          <ArrowLeft size={17} />
+        </button>
+        <small>REQUEST / {String(systemIndex + 1).padStart(2, '0')}.{String(index + 1).padStart(2, '0')}</small>
       </div>
     </article>
   )
 }
+
 
 function FaqItem({ question, children }) {
   return (
