@@ -411,20 +411,28 @@ function ProductShowcase({ product, index, onOrder }) {
         <p>{product.description}</p>
 
         <div className="feature-rows">
-          {product.features.slice(0, 6).map((feature) => (
-            <div key={feature}><Check size={16} /><span>{feature}</span></div>
+          {product.features.slice(0, 6).map((feature, featureIndex) => (
+            <div key={feature}>
+              <span className="feature-number">{String(featureIndex + 1).padStart(2, '0')}</span>
+              <Check size={15} />
+              <span>{feature}</span>
+            </div>
           ))}
         </div>
 
         <div className="product-buy">
           <div>
-            <span>قیمت</span>
+            <span>قیمت / واحد</span>
             <strong>{formatMoney(product)}</strong>
           </div>
           <button className="button button-dark" onClick={() => onOrder(product)}>
             {product.featured ? 'فعال‌سازی' : 'ثبت سفارش'}
             <ArrowLeft size={17} />
           </button>
+        </div>
+        <div className="product-footnote">
+          <span>DIRECT REQUEST</span>
+          <span>{String(index + 1).padStart(2, '0')} / {String(products.length).padStart(2, '0')}</span>
         </div>
       </div>
     </article>
