@@ -220,3 +220,11 @@
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
+
+/* visual refinement */
+.hero-art{background:#dfe0d9}
+.product-visual-google{background:#e4e5df;color:var(--ink)}
+.product-visual-chatgpt{background:#dbe1dc;color:var(--ink)}
+.principles{border:1px solid #aaa9a1}
+.future-section{position:relative;overflow:hidden}
+.final-cta-inner{display:grid;grid-template-columns:90px 1fr auto;align-items:end;gap:35px}
