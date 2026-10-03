@@ -309,10 +309,10 @@ function App() {
                 نیاز انجام شود، نه بر اساس یک برند خاص.
               </p>
               <div className="future-names" aria-label="اکوسیستم‌های هدف">
-                <span>Google AI</span>
-                <span>ChatGPT</span>
-                <span>Perplexity</span>
-                <span>+ more</span>
+                <span><b>01</b>Google AI</span>
+                <span><b>02</b>ChatGPT</span>
+                <span><b>03</b>Perplexity</span>
+                <span><b>04</b>+ more</span>
               </div>
             </div>
           </div>
