@@ -13,8 +13,8 @@ export function OrderModal({
   submitOrder,
   total
 }) {
-  if (!isOpen) return null
-
+  // Return early if we don't have a product selected for rendering purposes
+  // AnimatePresence handles the actual unmount logic via isOpen prop
   const formatPrice = (num) => new Intl.NumberFormat('fa-IR').format(num)
 
   return (
@@ -23,47 +23,46 @@ export function OrderModal({
         <div className="modal-overlay" role="presentation" onMouseDown={onClose}>
           <motion.div
             className="modal-content"
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.98, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            exit={{ opacity: 0, scale: 0.98, y: 10 }}
+            transition={{ type: "spring", damping: 30, stiffness: 400 }}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
             onMouseDown={(e) => e.stopPropagation()}
           >
             <button className="modal-close" onClick={onClose} aria-label="بستن">
-              <X size={20} />
+              <X size={20} strokeWidth={2.5} />
             </button>
 
             {status === 'success' ? (
               <div className="modal-success">
-                <CheckCircle className="success-icon" size={64} />
-                <h2 className="success-title">سفارش شما ثبت شد</h2>
+                <CheckCircle className="success-icon" size={64} strokeWidth={1.5} />
+                <h2 className="success-title">ثبت شد.</h2>
                 <p className="success-desc">
-                  اطلاعات سفارش با موفقیت برای ما ارسال شد. برای هماهنگی پرداخت و تحویل، به زودی با شما تماس خواهیم گرفت.
+                  درخواست لایسنس دریافت شد. فرایند فعال‌سازی به زودی آغاز می‌شود و از طریق مسیر ارتباطی هماهنگ خواهیم کرد.
                 </p>
-                <button className="btn btn-secondary btn-full mt-6" onClick={onClose}>
-                  بازگشت به سایت
+                <button className="btn btn-secondary btn-full mt-8" onClick={onClose}>
+                  بازگشت به پلتفرم
                 </button>
               </div>
             ) : (
               <>
                 <div className="modal-header">
-                  <span className="modal-kicker">ثبت سفارش</span>
+                  <span className="modal-kicker">ثبت اطلاعات سفارش</span>
                   <h2 id="modal-title" className="modal-title">{product?.name}</h2>
-                  <p className="modal-desc">{product?.description}</p>
                 </div>
 
                 <div className="modal-summary">
-                  <span className="summary-label">قیمت هر اشتراک</span>
-                  <span className="summary-value">{formatPrice(product?.price)} تومان</span>
+                  <span className="summary-label">تعرفه پایه لایسنس</span>
+                  <span className="summary-value fa-num">{formatPrice(product?.price / 1000)} هزار تومان</span>
                 </div>
 
                 <form onSubmit={submitOrder} className="modal-form">
 
                   <div className="form-group row-group">
-                    <label className="form-label" htmlFor="quantity">تعداد اشتراک</label>
+                    <label className="form-label" htmlFor="quantity">تعداد اکانت</label>
                     <div className="quantity-selector">
                       <button
                         type="button"
@@ -71,16 +70,16 @@ export function OrderModal({
                         onClick={() => setQuantity((v) => Math.max(1, v - 1))}
                         aria-label="کاهش تعداد"
                       >
-                        <Minus size={16} />
+                        <Minus size={16} strokeWidth={3} />
                       </button>
-                      <span id="quantity" className="qty-value">{formatPrice(quantity)}</span>
+                      <span id="quantity" className="qty-value fa-num">{formatPrice(quantity)}</span>
                       <button
                         type="button"
                         className="qty-btn"
                         onClick={() => setQuantity((v) => Math.min(99, v + 1))}
                         aria-label="افزایش تعداد"
                       >
-                        <Plus size={16} />
+                        <Plus size={16} strokeWidth={3} />
                       </button>
                     </div>
                   </div>
@@ -104,60 +103,37 @@ export function OrderModal({
                         id="phone"
                         dir="ltr"
                         type="tel"
-                        className="form-input text-left"
+                        className="form-input text-left fa-num"
                         value={form.phone}
                         onChange={(e) => updateField('phone', e.target.value)}
                         required
                         autoComplete="tel"
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label" htmlFor="company">نام کسب‌وکار <span className="opt">(اختیاری)</span></label>
-                      <input
-                        id="company"
-                        className="form-input"
-                        value={form.company}
-                        onChange={(e) => updateField('company', e.target.value)}
-                        autoComplete="organization"
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label" htmlFor="email">ایمیل <span className="opt">(اختیاری)</span></label>
-                      <input
-                        id="email"
-                        dir="ltr"
-                        type="email"
-                        className="form-input text-left"
-                        value={form.email}
-                        onChange={(e) => updateField('email', e.target.value)}
-                        autoComplete="email"
+                        placeholder="09..."
                       />
                     </div>
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label" htmlFor="notes">توضیحات <span className="opt">(اختیاری)</span></label>
-                    <textarea
-                      id="notes"
-                      className="form-textarea"
-                      value={form.notes}
-                      onChange={(e) => updateField('notes', e.target.value)}
-                      rows={3}
+                    <label className="form-label" htmlFor="company">نام سازمان یا کسب‌وکار <span className="opt">(اختیاری)</span></label>
+                    <input
+                      id="company"
+                      className="form-input"
+                      value={form.company}
+                      onChange={(e) => updateField('company', e.target.value)}
+                      autoComplete="organization"
                     />
                   </div>
 
                   {status === 'error' && (
                     <div className="form-error" role="alert">
-                      خطایی در ارسال سفارش رخ داد. لطفاً دوباره تلاش کنید.
+                      ارتباط با سرور برقرار نشد. لطفاً مجدداً تلاش کنید.
                     </div>
                   )}
 
                   <div className="modal-footer">
                     <div className="modal-total">
-                      <span className="total-label">مجموع قابل پرداخت</span>
-                      <span className="total-value">{formatPrice(total)} تومان</span>
+                      <span className="total-label">مجموع هزینه لایسنس‌ها</span>
+                      <span className="total-value fa-num">{formatPrice(total)} <span style={{fontSize: '0.6em', color: 'var(--color-text-muted)'}}>تومان</span></span>
                     </div>
                     <button
                       type="submit"
@@ -165,7 +141,7 @@ export function OrderModal({
                       disabled={status === 'sending'}
                     >
                       {status === 'sending' ? 'در حال ارسال...' : (
-                        <>ثبت درخواست سفارش <ArrowLeft size={18} /></>
+                        <>تایید و ارسال <ArrowLeft size={18} strokeWidth={2.5} /></>
                       )}
                     </button>
                   </div>

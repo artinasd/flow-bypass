@@ -129,9 +129,9 @@ function App() {
         <section className="products-section" id="products">
           <div className="container">
             <div className="section-header">
-              <span className="section-kicker">محصولات / {String(products.length).padStart(2, '۰')}</span>
-              <h2 className="section-title">ابزار مناسب خودت را انتخاب کن.</h2>
-              <p className="section-desc">محصولات را مقایسه کنید. ثبت درخواست بسیار ساده و سریع است.</p>
+              <span className="section-kicker">دسترسی و لایسنس</span>
+              <h2 className="section-title">محصول مناسب را انتخاب کنید.</h2>
+              <p className="section-desc">هر دو محصول دسترسی کامل به مدل‌های زبانی پیشرفته گوگل را فراهم می‌کنند. بر اساس نیاز به ابزارهای جانبی انتخاب کنید.</p>
             </div>
 
             <div className="product-grid">
