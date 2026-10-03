@@ -64,7 +64,7 @@
 .product-showcase:nth-child(even) .product-visual { order: 2; }
 .product-showcase:nth-child(even) .product-info { order: 1; }
 .product-visual { position: relative; overflow: hidden; min-height: 620px; padding: 28px; background: #151513; color: #fff; display: flex; flex-direction: column; justify-content: center; }
-.product-visual-google { background: linear-gradient(135deg, #10100f 0%, #1b1b18 60%, #2c2b26 100%); }
+.product-visual-chatgpt { background: linear-gradient(135deg, #10110f 0%, #1b1e1a 58%, #283029 100%); }\n.product-visual-google { background: linear-gradient(135deg, #10100f 0%, #1b1b18 60%, #2c2b26 100%); }
 .product-visual::after { content: ''; position: absolute; width: 360px; height: 360px; border-radius: 50%; background: radial-gradient(circle, #c7ff4338, transparent 66%); left: 5%; bottom: -18%; }
 .product-showcase-1 .product-visual::after { background: radial-gradient(circle, #8aa8ff42, transparent 66%); right: -10%; left: auto; top: -15%; bottom: auto; }
 .product-visual-top { position: absolute; top: 25px; inset-inline: 28px; display: flex; justify-content: space-between; color: #9a9890; font-size: 9px; letter-spacing: .13em; direction: ltr; }
