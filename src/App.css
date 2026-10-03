@@ -230,3 +230,4 @@
 .final-cta-inner{display:grid;grid-template-columns:90px 1fr auto;align-items:end;gap:35px}
 .hero-art-grid{background-size:44px 44px}.hero-orbit{left:67%;top:46%}.hero-core{width:185px;height:185px;left:67%;top:46%}
 .product-visual{border-inline-end:1px solid var(--ink)}.product-visual-google{background:#e4e5df;color:var(--ink)}.product-visual-chatgpt{background:#dbe1dc;color:var(--ink)}.product-brand-mark{width:132px;height:132px}.principles article{min-height:350px;display:flex;flex-direction:column}
+.future-section{position:relative;overflow:hidden}.future-grid{position:relative;z-index:1}.final-cta-inner{display:grid;grid-template-columns:90px 1fr auto;align-items:end;gap:35px}
