@@ -441,7 +441,7 @@ function FaqItem({ question, children }) {
 }
 
 function selectedCurrency(product, total) {
-  return product?.currency === 'USD' ? `${total}` : `${formatPrice(total)} تومان`
+  return formatTotal(product, total)
 }
 
 function OrderModal({ product, isOpen, onClose, status, form, updateField, quantity, setQuantity, submitOrder, total }) {
