@@ -206,6 +206,9 @@ function App() {
                 <strong>AI</strong>
                 <span className="hero-core-small">ACCESS / 01</span>
               </div>
+              <div className="hero-node hero-node-google">GOOGLE AI</div>
+              <div className="hero-node hero-node-chatgpt">CHATGPT</div>
+              <div className="hero-node hero-node-future">NEXT / SOON</div>
               <span className="hero-coordinate top">01 / 04</span>
               <span className="hero-coordinate bottom">DIGITAL TOOLS</span>
             </div>
