@@ -49,6 +49,7 @@ const products = [
 ]
 
 const formatPrice = (value) => new Intl.NumberFormat('fa-IR').format(value)
+const formatMoney = (product) => product?.currency === 'USD' ? `${product.price}` : `${formatPrice(product?.price)} تومان`
 
 function App() {
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -375,8 +376,7 @@ function ProductShowcase({ product, index, onOrder }) {
         <div className="product-buy">
           <div>
             <span>قیمت</span>
-            <strong>{formatPrice(product.price)}</strong>
-            <small>تومان</small>
+            <strong>{formatMoney(product)}</strong>
           </div>
           <button className="button button-dark" onClick={() => onOrder(product)}>
             {product.featured ? 'فعال‌سازی' : 'ثبت سفارش'}
@@ -395,6 +395,10 @@ function FaqItem({ question, children }) {
       <p>{children}</p>
     </details>
   )
+}
+
+function selectedCurrency(product, total) {
+  return product?.currency === 'USD' ? `${total}` : `${formatPrice(total)} تومان`
 }
 
 function OrderModal({ product, isOpen, onClose, status, form, updateField, quantity, setQuantity, submitOrder, total }) {
@@ -424,7 +428,7 @@ function OrderModal({ product, isOpen, onClose, status, form, updateField, quant
             <div className="order-summary">
               <div>
                 <span>قیمت واحد</span>
-                <strong>{formatPrice(product?.price)} تومان</strong>
+                <strong>{formatMoney(product)}</strong>
               </div>
               <div className="quantity-selector">
                 <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} aria-label="کاهش تعداد"><Minus size={16} /></button>
@@ -455,7 +459,7 @@ function OrderModal({ product, isOpen, onClose, status, form, updateField, quant
               {status === 'error' && <div className="order-error" role="alert">ارسال سفارش انجام نشد. لطفاً دوباره تلاش کنید.</div>}
 
               <div className="order-submit">
-                <div><span>مجموع</span><strong>{formatPrice(total)} <small>تومان</small></strong></div>
+                <div><span>مجموع</span><strong>{selectedCurrency(product, total)}</strong></div>
                 <button className="button button-dark" disabled={status === 'sending'} type="submit">
                   {status === 'sending' ? 'در حال ارسال...' : 'تأیید و ارسال'}
                   {status !== 'sending' && <ArrowLeft size={17} />}
