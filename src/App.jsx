@@ -77,7 +77,8 @@ const products = [
 ]
 
 const formatPrice = (value) => new Intl.NumberFormat('fa-IR').format(value)
-const formatMoney = (product) => product?.currency === 'USD' ? '
+const formatMoney = (product) => product?.currency === 'USD' ? '$' + product.price : `${formatPrice(product?.price)} تومان`
+const formatTotal = (product, total) => product?.currency === 'USD' ? '$' + total : `${formatPrice(total)} تومان`
 
 function App() {
   const [selectedProduct, setSelectedProduct] = useState(null)
