@@ -389,6 +389,17 @@ function ProductShowcase({ product, index, onOrder }) {
         <div className="product-visual-name">{product.provider}</div>
         <div className="product-visual-line" />
         <span className="product-visual-caption">{product.featured ? 'FULL ACCESS / 01' : 'ESSENTIAL ACCESS / 01'}</span>
+        <div className="visual-stack" aria-hidden="true">
+          {product.accent === 'google' ? (
+            <>
+              <span>GEMINI</span><span>FLOW</span><span>JULES</span><span>NOTEBOOKLM</span>
+            </>
+          ) : (
+            <>
+              <span>CHAT</span><span>REASON</span><span>CREATE</span><span>PLUS</span>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="product-info">
