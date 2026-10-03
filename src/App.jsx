@@ -257,34 +257,6 @@ function App() {
                 />
               ))}
             </div>
-                      <div className="system-orbit system-orbit-a" aria-hidden="true" />
-                      <div className="system-orbit system-orbit-b" aria-hidden="true" />
-                      <div className="system-node node-a">{accent === 'google' ? 'GEMINI' : 'CHAT'}</div>
-                      <div className="system-node node-b">{accent === 'google' ? 'FLOW' : 'REASON'}</div>
-                      <div className="system-node node-c">{accent === 'google' ? 'JULES' : 'CREATE'}</div>
-                      <div className="system-node node-d">{accent === 'google' ? 'NOTEBOOKLM' : 'PLUS'}</div>
-                    </div>
-
-                    <div className="system-offers">
-                      <div className="system-heading">
-                        <span>{provider}</span>
-                        <span>{String(systemProducts.length).padStart(2, '0')} OFFERS</span>
-                      </div>
-                      {systemProducts.map((product, productIndex) => (
-                        <ProductOffer
-                          key={product.id}
-                          product={product}
-                          index={productIndex}
-                          systemIndex={systemIndex}
-                          onOrder={openOrder}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                )
-              })}
-            </div>
-          </div>
         </section>
 
         <section className="principles-section">
