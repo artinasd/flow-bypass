@@ -2,10 +2,22 @@ const PRODUCTS = {
   'google-ai-pro-family': {
     name: 'اشتراک خانوادگی Google AI Pro',
     price: 250000,
+    currency: 'TOMAN',
   },
   'google-ai-pro-exclusive': {
     name: 'فعال‌سازی اختصاصی Google AI Pro',
     price: 600000,
+    currency: 'TOMAN',
+  },
+  'chatgpt-plus-full-warranty': {
+    name: 'ChatGPT Plus — ضمانت کامل',
+    price: 11,
+    currency: 'USD',
+  },
+  'chatgpt-plus-7-day-warranty': {
+    name: 'ChatGPT Plus — ضمانت ۷ روزه',
+    price: 8,
+    currency: 'USD',
   },
 }
 
@@ -40,7 +52,11 @@ export default async function handler(req, res) {
       return { ...product, quantity }
     })
 
+    const currencies = new Set(resolvedItems.map((item) => item.currency || 'TOMAN'))
+    if (currencies.size > 1) return json(res, 400, { error: 'سفارش هم‌زمان محصولات با ارز متفاوت مجاز نیست.' })
+    const currency = resolvedItems[0]?.currency || 'TOMAN'
     const total = resolvedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    const formatItemPrice = (value) => currency === 'USD' ? `${value}` : `${new Intl.NumberFormat('fa-IR').format(value)} تومان`
     const lines = [
       '🛍️ سفارش جدید از وب‌سایت',
       '',
@@ -50,9 +66,9 @@ export default async function handler(req, res) {
       email ? `✉️ ایمیل: ${email}` : '',
       '',
       '📦 سفارش:',
-      ...resolvedItems.map((item) => `• ${item.name} × ${item.quantity} — ${new Intl.NumberFormat('fa-IR').format(item.price * item.quantity)} تومان`),
+      ...resolvedItems.map((item) => `• ${item.name} × ${item.quantity} — ${formatItemPrice(item.price * item.quantity)}`),
       '',
-      `💰 مجموع: ${new Intl.NumberFormat('fa-IR').format(total)} تومان`,
+      `💰 مجموع: ${formatItemPrice(total)}`,
       notes ? `📝 توضیحات: ${notes}` : '',
       '',
       `🕐 ${new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Tehran' }).format(new Date())}`,
