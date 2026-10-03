@@ -270,24 +270,28 @@ function App() {
               <span className="section-index">03</span>
             </div>
 
-            <div className="principles">
+            <div className="process-map">
+              <div className="process-track" aria-hidden="true" />
               <article>
-                <span>01</span>
-                <ShieldCheck size={24} />
+                <div className="process-marker"><span>01</span></div>
+                <div className="process-icon"><ShieldCheck size={22} /></div>
                 <h3>انتخاب روشن</h3>
                 <p>ویژگی‌ها و قیمت هر محصول را قبل از ثبت درخواست می‌بینید.</p>
+                <span className="process-code">SELECT / 01</span>
               </article>
               <article>
-                <span>02</span>
-                <ArrowUpLeft size={24} />
+                <div className="process-marker"><span>02</span></div>
+                <div className="process-icon"><ArrowUpLeft size={22} /></div>
                 <h3>ثبت درخواست</h3>
                 <p>اطلاعات تماس و تعداد موردنیاز را در چند مرحله کوتاه ثبت می‌کنید.</p>
+                <span className="process-code">REQUEST / 02</span>
               </article>
               <article>
-                <span>03</span>
-                <Check size={24} />
+                <div className="process-marker"><span>03</span></div>
+                <div className="process-icon"><Check size={22} /></div>
                 <h3>هماهنگی و فعال‌سازی</h3>
                 <p>درخواست شما دریافت می‌شود و ادامه فرایند برایتان هماهنگ خواهد شد.</p>
+                <span className="process-code">ACTIVATE / 03</span>
               </article>
             </div>
           </div>
