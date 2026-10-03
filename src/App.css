@@ -231,3 +231,7 @@
 .hero-art-grid{background-size:44px 44px}.hero-orbit{left:67%;top:46%}.hero-core{width:185px;height:185px;left:67%;top:46%}
 .product-visual{border-inline-end:1px solid var(--ink)}.product-visual-google{background:#e4e5df;color:var(--ink)}.product-visual-chatgpt{background:#dbe1dc;color:var(--ink)}.product-brand-mark{width:132px;height:132px}.principles article{min-height:350px;display:flex;flex-direction:column}
 .future-section{position:relative;overflow:hidden}.future-grid{position:relative;z-index:1}.final-cta-inner{display:grid;grid-template-columns:90px 1fr auto;align-items:end;gap:35px}
+
+.hero-node{position:absolute;z-index:4;padding:12px 16px;border:1px solid var(--ink);background:rgba(244,242,236,.88);font-size:9px;font-weight:800;letter-spacing:.08em;direction:ltr;box-shadow:10px 10px 0 rgba(17,17,15,.08)}
+.hero-node-google{right:11%;top:24%}.hero-node-chatgpt{left:11%;top:58%}.hero-node-future{right:18%;bottom:18%;opacity:.55}
+@media(max-width:700px){.hero-node{padding:9px 11px;font-size:8px}.hero-node-google{right:7%;top:20%}.hero-node-chatgpt{left:7%;top:62%}.hero-node-future{right:8%;bottom:14%}}
