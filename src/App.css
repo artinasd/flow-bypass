@@ -266,6 +266,24 @@ section{position:relative}
 .marquee-track i{font-style:normal;color:var(--accent)}
 @keyframes marquee{to{transform:translateX(-25%)}}
 
+
+/* SCROLL REVEALS
+   Native IntersectionObserver keeps this lightweight on mobile. */
+html.reveal-ready [data-reveal]{
+  opacity:0;
+  transform:translate3d(0,28px,0) scale(.988);
+  transition:
+    opacity .7s cubic-bezier(.22,1,.36,1),
+    transform .7s cubic-bezier(.22,1,.36,1);
+  transition-delay:var(--reveal-delay,0ms);
+  will-change:opacity,transform;
+}
+html.reveal-ready [data-reveal].is-visible{
+  opacity:1;
+  transform:translate3d(0,0,0) scale(1);
+  will-change:auto;
+}
+
 /* SECTION SYSTEM */
 .manifesto-section,.products-section,.principles-section,.faq-section{
   background:var(--bg);
@@ -880,6 +898,10 @@ section{position:relative}
   .faq-grid{grid-template-columns:1fr;gap:60px}
 }
 @media(max-width:700px){
+  html.reveal-ready [data-reveal]{
+    transform:translate3d(0,20px,0) scale(.992);
+    transition-duration:.6s;
+  }
   body:before{display:none}
   .container{width:calc(100% - 30px)}
   .site-header{position:relative}
