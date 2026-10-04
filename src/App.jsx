@@ -421,7 +421,15 @@ function ProductShowcase({ product, index, onOrder, revealDelay = 0 }) {
           <span>{String(index + 1).padStart(2, '0')}</span>
           <span>{product.category}</span>
         </div>
-        <div className="product-brand-mark">{product.providerMark}</div>
+        <div className="product-brand-mark">
+          <img
+            src={product.accent === 'google' ? 'https://cdn.simpleicons.org/googlegemini' : 'https://cdn.simpleicons.org/openai'}
+            alt=""
+            className="product-brand-logo"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
         <div className="product-visual-name">{product.provider}</div>
         <div className="product-visual-line" />
         <span className="product-visual-caption">{product.featured ? 'FULL ACCESS / 01' : 'ESSENTIAL ACCESS / 01'}</span>
