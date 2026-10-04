@@ -423,12 +423,15 @@ html.reveal-ready [data-reveal].is-visible{
   direction:ltr;
 }
 .product-brand-mark{
-  position:relative;
+  position:absolute;
   z-index:2;
   width:128px;height:128px;
+  left:50%;
+  top:47%;
   display:grid;
   place-items:center;
-  margin-inline:auto;
+  margin:0;
+  transform:translate(-50%,-50%);
   border:1px solid rgba(255,255,255,.16);
   border-radius:50%;
   background:rgba(255,255,255,.035);
@@ -439,28 +442,42 @@ html.reveal-ready [data-reveal].is-visible{
   backdrop-filter:blur(12px);
 }
 .product-visual-name{
-  position:relative;z-index:2;
-  margin:25px auto 0;
+  position:absolute;
+  z-index:2;
+  left:50%;
+  top:calc(47% + 88px);
+  margin:0;
+  transform:translateX(-50%);
   color:#e8ebef;
   font-size:clamp(25px,3vw,43px);
   font-weight:700;
   letter-spacing:-.055em;
   direction:ltr;
+  white-space:nowrap;
 }
 .product-visual-line{
-  position:relative;z-index:2;
+  position:absolute;
+  z-index:2;
+  left:50%;
+  top:calc(47% + 139px);
   width:55%;
   height:1px;
-  margin:22px auto;
+  margin:0;
+  transform:translateX(-50%);
   background:rgba(255,255,255,.13);
 }
 .product-visual-caption{
-  position:relative;z-index:2;
-  margin:0 auto;
+  position:absolute;
+  z-index:2;
+  left:50%;
+  top:calc(47% + 154px);
+  margin:0;
+  transform:translateX(-50%);
   color:#737e8b;
   font-size:8px;
   letter-spacing:.18em;
   direction:ltr;
+  white-space:nowrap;
 }
 .visual-stack{
   position:absolute;
@@ -935,6 +952,9 @@ html.reveal-ready [data-reveal].is-visible{
   .product-showcase{border-radius:14px}
   .product-visual{min-height:370px}
   .product-brand-mark{width:108px;height:108px;font-size:50px}
+  .product-visual-name{top:calc(47% + 77px);font-size:clamp(24px,8vw,34px)}
+  .product-visual-line{top:calc(47% + 119px)}
+  .product-visual-caption{top:calc(47% + 134px)}
   .product-info{padding:45px 23px}
   .product-info h3{font-size:44px}
   .product-buy{align-items:stretch;flex-direction:column}
