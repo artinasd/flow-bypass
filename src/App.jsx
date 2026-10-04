@@ -196,21 +196,17 @@ function App() {
               </div>
             </div>
 
-            <div className="hero-art" aria-hidden="true">
-              <div className="hero-art-grid" />
-              <div className="hero-orbit orbit-one" />
-              <div className="hero-orbit orbit-two" />
-              <div className="hero-orbit orbit-three" />
-              <div className="hero-core">
-                <span className="hero-core-small">INTELLIGENCE</span>
-                <strong>AI</strong>
-                <span className="hero-core-small">ACCESS / 01</span>
-              </div>
-              <div className="hero-node hero-node-google">GOOGLE AI</div>
-              <div className="hero-node hero-node-chatgpt">CHATGPT</div>
-              <div className="hero-node hero-node-future">NEXT / SOON</div>
-              <span className="hero-coordinate top">01 / 04</span>
-              <span className="hero-coordinate bottom">DIGITAL TOOLS</span>
+            <div className="hero-art">
+              <img
+                className="hero-image"
+                src="/hero.jpg"
+                alt=""
+                fetchPriority="high"
+                decoding="async"
+              />
+              <div className="hero-image-overlay" aria-hidden="true" />
+              <span className="hero-image-label">AI / ACCESS SYSTEM</span>
+              <span className="hero-image-index">01 / 04</span>
             </div>
           </div>
 
