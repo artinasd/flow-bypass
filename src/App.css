@@ -385,7 +385,7 @@ html.reveal-ready [data-reveal].is-visible{
 .product-visual:after{
   content:"";
   position:absolute;
-  width:360px;height:360px;
+  width:470px;height:470px;
   left:50%;top:47%;
   transform:translate(-50%,-50%);
   border-radius:50%;
@@ -402,7 +402,7 @@ html.reveal-ready [data-reveal].is-visible{
 }
 .product-visual-glow{
   position:absolute;
-  width:180px;height:180px;
+  width:220px;height:220px;
   left:50%;top:47%;
   transform:translate(-50%,-50%);
   border-radius:50%;
