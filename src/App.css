@@ -196,80 +196,49 @@ section{position:relative}
   overflow:hidden;
   border:1px solid var(--line);
   border-radius:22px;
-  background:
-    radial-gradient(circle at 50% 48%,rgba(139,124,255,.11),transparent 27%),
-    rgba(255,255,255,.018);
+  background:#080b10;
   box-shadow:0 35px 100px rgba(0,0,0,.28);
+  isolation:isolate;
 }
-.hero-art-grid{
-  position:absolute;inset:0;opacity:.48;
-  background-image:
-    linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
-  background-size:48px 48px;
-  mask-image:linear-gradient(to bottom,black,transparent 88%);
-}
-.hero-orbit{
+.hero-image{
   position:absolute;
-  left:67%;top:46%;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:50%;
-  transform:translate(-50%,-50%) rotate(-18deg);
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+  object-position:center;
+  filter:saturate(.92) contrast(1.02);
+  transform:scale(1.012);
+  transition:transform .7s cubic-bezier(.2,.7,.2,1),filter .35s ease;
 }
-.orbit-one{width:78%;height:38%}
-.orbit-two{width:62%;height:62%;transform:translate(-50%,-50%) rotate(54deg)}
-.orbit-three{width:35%;height:82%;transform:translate(-50%,-50%) rotate(105deg);border-style:dashed}
-.hero-core{
-  position:absolute;
-  width:184px;height:184px;
-  left:67%;top:46%;
-  transform:translate(-50%,-50%);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  border:1px solid rgba(255,255,255,.17);
-  border-radius:50%;
-  background:rgba(13,17,24,.74);
-  box-shadow:0 0 70px rgba(139,124,255,.11),inset 0 0 40px rgba(255,255,255,.025);
-  backdrop-filter:blur(18px);
-  -webkit-backdrop-filter:blur(18px);
-  animation:coreBreath 7s ease-in-out infinite;
+.hero-art:hover .hero-image{
+  transform:scale(1.035);
+  filter:saturate(1) contrast(1.04);
 }
-.hero-core strong{font-size:62px;line-height:.9;letter-spacing:-.08em}
-.hero-core-small{font-size:7px;letter-spacing:.2em;color:#8d97a5;direction:ltr}
-.hero-coordinate{
+.hero-image-overlay{
   position:absolute;
-  color:#6e7885;
-  font-size:8px;
-  letter-spacing:.16em;
-  direction:ltr;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg,rgba(7,9,13,.48),transparent 42%),
+    linear-gradient(180deg,rgba(7,9,13,.16),transparent 28%,rgba(7,9,13,.34)),
+    radial-gradient(circle at 72% 48%,transparent 30%,rgba(7,9,13,.28) 100%);
 }
-.hero-coordinate.top{top:18px;left:20px}
-.hero-coordinate.bottom{right:20px;bottom:18px}
-.hero-node{
+.hero-image-label,
+.hero-image-index{
   position:absolute;
-  z-index:4;
-  padding:10px 13px;
-  border:1px solid rgba(255,255,255,.13);
-  border-radius:8px;
-  background:rgba(12,16,22,.72);
-  color:#c6cdd6;
-  box-shadow:0 14px 40px rgba(0,0,0,.22);
-  backdrop-filter:blur(14px);
+  z-index:2;
+  color:rgba(240,244,248,.66);
   font-size:8px;
   font-weight:700;
-  letter-spacing:.1em;
+  letter-spacing:.16em;
   direction:ltr;
+  text-transform:uppercase;
 }
-.hero-node-google{right:9%;top:23%}
-.hero-node-chatgpt{left:9%;top:59%}
-.hero-node-future{right:16%;bottom:16%;opacity:.48}
-@keyframes coreBreath{
-  0%,100%{box-shadow:0 0 55px rgba(139,124,255,.09),inset 0 0 40px rgba(255,255,255,.025)}
-  50%{box-shadow:0 0 85px rgba(139,124,255,.16),inset 0 0 45px rgba(255,255,255,.04)}
-}
+.hero-image-label{left:20px;top:18px}
+.hero-image-index{right:20px;bottom:18px}
 .hero-marquee{
   overflow:hidden;
   margin-top:26px;
@@ -919,12 +888,9 @@ section{position:relative}
   .hero-actions{align-items:stretch;flex-direction:column;gap:15px}
   .button{width:100%}
   .hero-art{min-height:390px;border-radius:15px}
-  .hero-core{width:130px;height:130px}
-  .hero-core strong{font-size:47px}
-  .hero-node{padding:8px 10px;font-size:7px}
-  .hero-node-google{right:6%;top:19%}
-  .hero-node-chatgpt{left:6%;top:63%}
-  .hero-node-future{right:7%;bottom:12%}
+  .hero-image{object-position:center center}
+  .hero-image-label{left:14px;top:14px}
+  .hero-image-index{right:14px;bottom:14px}
   .hero-marquee{margin-top:18px}
   .manifesto-section,.products-section,.principles-section,.future-section,.faq-section{padding-block:105px}
   .manifesto-grid,.future-grid{grid-template-columns:34px 1fr;gap:16px}
