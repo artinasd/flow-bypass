@@ -1,27 +1,5 @@
 [
   {
-    "id": "google-ai-pro-family",
-    "provider": "Google AI Pro",
-    "providerMark": "G",
-    "category": "اشتراک هوش مصنوعی",
-    "name": "اشتراک Family",
-    "price": 250000,
-    "originalPrice": 250000,
-    "description": "راهی اقتصادی برای ورود به اکوسیستم حرفه‌ای Google AI، بدون Google Flow.",
-    "featured": false,
-    "badge": "اقتصادی",
-    "accent": "google",
-    "features": [
-      "دسترسی کامل به Gemini و مدل‌های پیشرفته",
-      "تولید تصویر، ویدیو و موسیقی",
-      "Jules Coding Agent",
-      "NotebookLM",
-      "Anti Gravity",
-      "۵ ترابایت فضای ابری",
-      "بدون Google Flow"
-    ]
-  },
-  {
     "id": "google-ai-pro-exclusive",
     "provider": "Google AI Pro",
     "providerMark": "G",
@@ -42,6 +20,28 @@
       "Jules Coding Agent",
       "NotebookLM و Anti Gravity",
       "۵ ترابایت فضای ابری"
+    ]
+  },
+  {
+    "id": "google-ai-pro-family",
+    "provider": "Google AI Pro",
+    "providerMark": "G",
+    "category": "اشتراک هوش مصنوعی",
+    "name": "اشتراک Family",
+    "price": 250000,
+    "originalPrice": 250000,
+    "description": "راهی اقتصادی برای ورود به اکوسیستم حرفه‌ای Google AI، بدون Google Flow.",
+    "featured": false,
+    "badge": "اقتصادی",
+    "accent": "google",
+    "features": [
+      "دسترسی کامل به Gemini و مدل‌های پیشرفته",
+      "تولید تصویر، ویدیو و موسیقی",
+      "Jules Coding Agent",
+      "NotebookLM",
+      "Anti Gravity",
+      "۵ ترابایت فضای ابری",
+      "بدون Google Flow"
     ]
   },
   {
