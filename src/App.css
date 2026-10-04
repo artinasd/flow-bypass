@@ -385,25 +385,31 @@ html.reveal-ready [data-reveal].is-visible{
 .product-visual:after{
   content:"";
   position:absolute;
-  width:300px;height:300px;
-  left:50%;top:50%;
-  transform:translate(-50%,-50%);
-  border:1px solid rgba(255,255,255,.075);
-  border-radius:50%;
-  box-shadow:
-    0 0 0 62px rgba(255,255,255,.012),
-    0 0 0 124px rgba(255,255,255,.008);
-  animation:slowSpin 26s linear infinite;
-}
-.product-visual-glow{
-  position:absolute;
-  width:150px;height:150px;
+  width:360px;height:360px;
   left:50%;top:47%;
   transform:translate(-50%,-50%);
   border-radius:50%;
-  background:rgba(139,124,255,.11);
-  filter:blur(38px);
+  background:
+    radial-gradient(circle,
+      rgba(167,156,255,.18) 0%,
+      rgba(139,124,255,.10) 22%,
+      rgba(93,121,255,.045) 43%,
+      rgba(139,124,255,0) 72%);
+  filter:blur(2px);
+  opacity:.9;
+  animation:orbitalGlow 8s ease-in-out infinite;
+  pointer-events:none;
+}
+.product-visual-glow{
+  position:absolute;
+  width:180px;height:180px;
+  left:50%;top:47%;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:rgba(139,124,255,.12);
+  filter:blur(52px);
   animation:softGlow 6s ease-in-out infinite;
+  pointer-events:none;
 }
 .product-visual-top{
   position:absolute;
@@ -959,6 +965,10 @@ html.reveal-ready [data-reveal].is-visible{
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+@keyframes orbitalGlow{
+  0%,100%{transform:translate(-50%,-50%) scale(.94);opacity:.72}
+  50%{transform:translate(-50%,-50%) scale(1.06);opacity:1}
 }
 @keyframes slowSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
 @keyframes softGlow{0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(1)}50%{opacity:.9;transform:translate(-50%,-50%) scale(1.12)}}
