@@ -98,6 +98,36 @@ function App() {
   }, [status])
 
   useEffect(() => {
+    const revealItems = document.querySelectorAll('[data-reveal]')
+    if (!revealItems.length) return undefined
+
+    document.documentElement.classList.add('reveal-ready')
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
+      revealItems.forEach((item) => item.classList.add('is-visible'))
+      return () => document.documentElement.classList.remove('reveal-ready')
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return
+        entry.target.classList.add('is-visible')
+        observer.unobserve(entry.target)
+      })
+    }, {
+      threshold: 0.12,
+      rootMargin: '0px 0px -8% 0px',
+    })
+
+    revealItems.forEach((item) => observer.observe(item))
+
+    return () => {
+      observer.disconnect()
+      document.documentElement.classList.remove('reveal-ready')
+    }
+  }, [])
+
+  useEffect(() => {
     document.body.style.overflow = selectedProduct ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [selectedProduct])
@@ -219,7 +249,7 @@ function App() {
         </section>
 
         <section className="manifesto-section" id="experience">
-          <div className="container manifesto-grid">
+          <div className="container manifesto-grid" data-reveal>
             <span className="section-index">01</span>
             <div>
               <p className="section-label">رویکرد ما</p>
@@ -235,7 +265,7 @@ function App() {
 
         <section className="products-section" id="products">
           <div className="container">
-            <div className="section-intro">
+            <div className="section-intro" data-reveal>
               <div>
                 <span className="section-label">محصولات فعلی</span>
                 <h2>چیزی را انتخاب کنید<br />که به کارتان می‌آید.</h2>
@@ -250,6 +280,7 @@ function App() {
                   product={product}
                   index={index}
                   onOrder={openOrder}
+                  revealDelay={index * 70}
                 />
               ))}
             </div>
@@ -258,7 +289,7 @@ function App() {
 
         <section className="principles-section">
           <div className="container">
-            <div className="section-intro principles-intro">
+            <div className="section-intro principles-intro" data-reveal>
               <div>
                 <span className="section-label">فرایند</span>
                 <h2>ساده، روشن،<br />بدون حاشیه.</h2>
@@ -266,7 +297,7 @@ function App() {
               <span className="section-index">03</span>
             </div>
 
-            <div className="process-map">
+            <div className="process-map" data-reveal>
               <div className="process-track" aria-hidden="true" />
               <article>
                 <div className="process-marker"><span>01</span></div>
@@ -294,7 +325,7 @@ function App() {
         </section>
 
         <section className="future-section">
-          <div className="container future-grid">
+          <div className="container future-grid" data-reveal>
             <span className="section-index">04</span>
             <div>
               <span className="section-label">در حال گسترش</span>
@@ -315,7 +346,7 @@ function App() {
         </section>
 
         <section className="faq-section" id="faq">
-          <div className="container faq-grid">
+          <div className="container faq-grid" data-reveal>
             <div>
               <span className="section-label">شفافیت</span>
               <h2>سوال‌های<br />مهم، جواب‌های<br /><span>روشن.</span></h2>
@@ -338,7 +369,7 @@ function App() {
         </section>
 
         <section className="final-cta">
-          <div className="container final-cta-inner">
+          <div className="container final-cta-inner" data-reveal>
             <span className="section-label">شروع کنید</span>
             <h2>ابزار بعدی<br /><em>می‌تواند همین‌جا باشد.</em></h2>
             <a href="#products" className="button button-light">
@@ -377,9 +408,13 @@ function App() {
   )
 }
 
-function ProductShowcase({ product, index, onOrder }) {
+function ProductShowcase({ product, index, onOrder, revealDelay = 0 }) {
   return (
-    <article className={'product-showcase product-showcase-' + index}>
+    <article
+      className={'product-showcase product-showcase-' + index}
+      data-reveal
+      style={{ '--reveal-delay': `${revealDelay}ms` }}
+    >
       <div className={'product-visual product-visual-' + product.accent}>
         <div className="product-visual-glow" aria-hidden="true" />
         <div className="product-visual-top">
