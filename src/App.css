@@ -210,7 +210,7 @@ section{position:relative}
   object-position:center;
   filter:saturate(.92) contrast(1.02);
   transform:translate3d(0,0,0) scale(1.012);
-  animation:heroImageDrift 16s ease-in-out infinite;
+  animation:heroImageDrift 9s ease-in-out infinite;
   will-change:transform;
 }
 .hero-art:hover .hero-image{
