@@ -423,7 +423,7 @@ function ProductShowcase({ product, index, onOrder, revealDelay = 0 }) {
         </div>
         <div className="product-brand-mark">
           <img
-            src={product.accent === 'google' ? 'https://cdn.simpleicons.org/googlegemini' : 'https://cdn.simpleicons.org/openai'}
+            src={product.accent === 'google' ? 'https://cdn.simpleicons.org/googlegemini' : '/openai-logo.svg'}
             alt=""
             className="product-brand-logo"
             loading="lazy"
