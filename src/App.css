@@ -994,3 +994,17 @@ html.reveal-ready [data-reveal].is-visible{
 @keyframes softGlow{0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(1)}50%{opacity:.9;transform:translate(-50%,-50%) scale(1.12)}}
 
 @media (prefers-reduced-motion:reduce){.hero-image{animation:none}}
+
+
+.product-brand-mark{
+  overflow:hidden;
+}
+
+.product-brand-logo{
+  width:58px;
+  height:58px;
+  display:block;
+  object-fit:contain;
+  filter:brightness(0) invert(1);
+  opacity:.96;
+}
