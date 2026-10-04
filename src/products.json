@@ -1,0 +1,87 @@
+[
+  {
+    "id": "google-ai-pro-family",
+    "provider": "Google AI Pro",
+    "providerMark": "G",
+    "category": "اشتراک هوش مصنوعی",
+    "name": "اشتراک خانوادگی",
+    "price": 250000,
+    "originalPrice": 250000,
+    "description": "راهی اقتصادی برای ورود به اکوسیستم حرفه‌ای Google AI، بدون Google Flow.",
+    "featured": false,
+    "badge": "اقتصادی",
+    "accent": "google",
+    "features": [
+      "دسترسی کامل به Gemini و مدل‌های پیشرفته",
+      "تولید تصویر، ویدیو و موسیقی",
+      "Jules Coding Agent",
+      "NotebookLM",
+      "Anti Gravity",
+      "۵ ترابایت فضای ابری",
+      "بدون Google Flow"
+    ]
+  },
+  {
+    "id": "google-ai-pro-exclusive",
+    "provider": "Google AI Pro",
+    "providerMark": "G",
+    "category": "اشتراک هوش مصنوعی",
+    "name": "فعال‌سازی اختصاصی",
+    "price": 600000,
+    "originalPrice": 600000,
+    "description": "تجربه کامل‌تر Google AI Pro با Flow و اعتبار ماهانه برای تولید محتوا.",
+    "featured": true,
+    "badge": "پیشنهاد ویژه",
+    "accent": "google",
+    "features": [
+      "تمام امکانات Google AI Pro",
+      "دسترسی به Google Flow",
+      "۱۰۰۰ اعتبار ماهانه",
+      "دسترسی کامل به Gemini و مدل‌های پیشرفته",
+      "تولید تصویر، ویدیو و موسیقی",
+      "Jules Coding Agent",
+      "NotebookLM و Anti Gravity",
+      "۵ ترابایت فضای ابری"
+    ]
+  },
+  {
+    "id": "chatgpt-plus-full-warranty",
+    "provider": "ChatGPT Plus",
+    "providerMark": "C",
+    "category": "اشتراک هوش مصنوعی",
+    "name": "پلاس با ضمانت کامل",
+    "price": 11,
+    "originalPrice": 11,
+    "currency": "USD",
+    "description": "اشتراک ChatGPT Plus با ضمانت کامل برای خیال راحت‌تر در استفاده.",
+    "featured": true,
+    "badge": "ضمانت کامل",
+    "accent": "chatgpt",
+    "features": [
+      "دسترسی به ChatGPT Plus",
+      "ضمانت کامل",
+      "دسترسی به قابلیت‌های حرفه‌ای ChatGPT",
+      "مناسب استفاده شخصی و حرفه‌ای"
+    ]
+  },
+  {
+    "id": "chatgpt-plus-7-day-warranty",
+    "provider": "ChatGPT Plus",
+    "providerMark": "C",
+    "category": "اشتراک هوش مصنوعی",
+    "name": "پلاس با ضمانت ۷ روزه",
+    "price": 8,
+    "originalPrice": 8,
+    "currency": "USD",
+    "description": "نسخه اقتصادی ChatGPT Plus با ضمانت ۷ روزه.",
+    "featured": false,
+    "badge": "اقتصادی",
+    "accent": "chatgpt",
+    "features": [
+      "دسترسی به ChatGPT Plus",
+      "ضمانت ۷ روزه",
+      "دسترسی به قابلیت‌های حرفه‌ای ChatGPT",
+      "گزینه اقتصادی‌تر"
+    ]
+  }
+]
