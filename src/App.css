@@ -210,7 +210,7 @@ section{position:relative}
   object-position:center;
   filter:saturate(.92) contrast(1.02);
   transform:translate3d(0,0,0) scale(1.012);
-  animation:heroImageDrift 24s ease-in-out infinite;
+  animation:heroImageDrift 16s ease-in-out infinite;
   will-change:transform;
 }
 .hero-art:hover .hero-image{
@@ -218,9 +218,9 @@ section{position:relative}
 }
 @keyframes heroImageDrift{
   0%,100%{transform:translate3d(0,0,0) scale(1.012)}
-  25%{transform:translate3d(3px,-2px,0) scale(1.016)}
-  50%{transform:translate3d(-2px,-4px,0) scale(1.014)}
-  75%{transform:translate3d(-3px,2px,0) scale(1.016)}
+  25%{transform:translate3d(3px,-3px,0) scale(1.017)}
+  50%{transform:translate3d(-3px,-5px,0) scale(1.015)}
+  75%{transform:translate3d(-4px,3px,0) scale(1.017)}
 }
 .hero-image-overlay{
   position:absolute;
