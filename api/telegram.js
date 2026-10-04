@@ -109,7 +109,7 @@ export default async function handler(req, res) {
   }
 
   const token = process.env.TELEGRAM_BOT_TOKEN
-  const adminChatId = String(process.env.TELEGRAM_ADMIN_CHAT_ID || '')
+  const adminChatId = String(process.env.TELEGRAM_ADMIN_CHAT_ID || process.env.TELEGRAM_CHAT_ID || '')
   const githubToken = process.env.GITHUB_TOKEN
   const repository = process.env.GITHUB_REPOSITORY || 'artinasd/flow-bypass'
   const branch = process.env.GITHUB_BRANCH || 'main'
