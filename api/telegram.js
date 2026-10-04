@@ -54,7 +54,7 @@ const getCatalog = async (githubToken, repository, branch) => {
     githubToken,
   )
 
-  const content = Buffer.from(result.content.replace(/\\n/g, ''), 'base64').toString('utf8')
+  const content = Buffer.from(result.content.replace(/\n/g, ''), 'base64').toString('utf8')
   return { products: JSON.parse(content), sha: result.sha }
 }
 
@@ -66,7 +66,7 @@ const saveCatalog = async (githubToken, repository, branch, products, sha) => {
     githubToken,
     {
       message: 'Update product prices from Telegram',
-      content: Buffer.from(`${JSON.stringify(products, null, 2)}\\n`).toString('base64'),
+      content: Buffer.from(`${JSON.stringify(products, null, 2)}\n`).toString('base64'),
       sha,
       branch,
     },
@@ -82,9 +82,9 @@ const productListText = (products) => [
     const discount = product.originalPrice && product.originalPrice !== product.price
       ? ` — قیمت اصلی: ${formatPrice({ ...product, price: product.originalPrice })}`
       : ''
-    return `• ${product.id}\\n  ${product.name}: ${formatPrice(product)}${discount}`
+    return `• ${product.id}\n  ${product.name}: ${formatPrice(product)}${discount}`
   }),
-].join('\\n')
+].join('\n')
 
 const helpText = [
   '🛠 مدیریت قیمت‌ها',
@@ -98,7 +98,7 @@ const helpText = [
   '/setprice google-ai-pro-exclusive 550000',
   '/discount google-ai-pro-exclusive 15',
   '/resetprice google-ai-pro-exclusive',
-].join('\\n')
+].join('\n')
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
@@ -127,7 +127,7 @@ export default async function handler(req, res) {
     if (!message || !text) return json(res, 200, { ok: true })
     if (chatId !== adminChatId) return json(res, 200, { ok: true })
 
-    const [command, ...args] = text.split(/\\s+/)
+    const [command, ...args] = text.split(/\s+/)
     const normalizedCommand = command.split('@')[0].toLowerCase()
 
     if (normalizedCommand === '/start' || normalizedCommand === '/help') {
@@ -144,7 +144,7 @@ export default async function handler(req, res) {
       const [id, rawPrice] = args
       const price = Number(rawPrice)
       if (!id || !Number.isFinite(price) || price <= 0 || !Number.isInteger(price)) {
-        await sendTelegramMessage(token, chatId, '❌ فرمت نادرست است.\\nمثال: /setprice google-ai-pro-exclusive 550000')
+        await sendTelegramMessage(token, chatId, '❌ فرمت نادرست است.\nمثال: /setprice google-ai-pro-exclusive 550000')
         return json(res, 200, { ok: true })
       }
 
@@ -163,7 +163,7 @@ export default async function handler(req, res) {
       await sendTelegramMessage(
         token,
         chatId,
-        `✅ قیمت ${product.name} به ${formatPrice(product)} تغییر کرد.\\n\\nVercel پس از commit جدید، سایت را دوباره deploy می‌کند.`,
+        `✅ قیمت ${product.name} به ${formatPrice(product)} تغییر کرد.\n\nVercel پس از commit جدید، سایت را دوباره deploy می‌کند.`,
       )
       return json(res, 200, { ok: true })
     }
@@ -172,7 +172,7 @@ export default async function handler(req, res) {
       const [id, rawPercent] = args
       const percent = Number(rawPercent)
       if (!id || !Number.isFinite(percent) || percent < 0 || percent >= 100) {
-        await sendTelegramMessage(token, chatId, '❌ درصد تخفیف باید بین ۰ تا ۹۹ باشد.\\nمثال: /discount google-ai-pro-exclusive 15')
+        await sendTelegramMessage(token, chatId, '❌ درصد تخفیف باید بین ۰ تا ۹۹ باشد.\nمثال: /discount google-ai-pro-exclusive 15')
         return json(res, 200, { ok: true })
       }
 
@@ -192,7 +192,7 @@ export default async function handler(req, res) {
       await sendTelegramMessage(
         token,
         chatId,
-        `🏷️ تخفیف ${percent}% روی ${product.name} اعمال شد.\\nقیمت جدید: ${formatPrice(product)}\\nقیمت اصلی: ${formatPrice({ ...product, price: originalPrice })}\\n\\nVercel پس از commit جدید، سایت را دوباره deploy می‌کند.`,
+        `🏷️ تخفیف ${percent}% روی ${product.name} اعمال شد.\nقیمت جدید: ${formatPrice(product)}\nقیمت اصلی: ${formatPrice({ ...product, price: originalPrice })}\n\nVercel پس از commit جدید، سایت را دوباره deploy می‌کند.`,
       )
       return json(res, 200, { ok: true })
     }
@@ -219,7 +219,7 @@ export default async function handler(req, res) {
       await sendTelegramMessage(
         token,
         chatId,
-        `↩️ قیمت ${product.name} به ${formatPrice(product)} بازگردانده شد.\\n\\nVercel پس از commit جدید، سایت را دوباره deploy می‌کند.`,
+        `↩️ قیمت ${product.name} به ${formatPrice(product)} بازگردانده شد.\n\nVercel پس از commit جدید، سایت را دوباره deploy می‌کند.`,
       )
       return json(res, 200, { ok: true })
     }
