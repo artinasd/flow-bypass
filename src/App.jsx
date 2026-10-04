@@ -1,4 +1,7 @@
+import { useEffect, useMemo, useState, useCallback } from 'react'
+import { ArrowDownLeft, ArrowUpLeft, Check, ChevronDown, Minus, Plus, X, ArrowLeft, Sparkles, ShieldCheck } from 'lucide-react'
 import products from './products.json'
+import './App.css'
 
 const formatPrice = (value) => new Intl.NumberFormat('fa-IR').format(value)
 const formatMoney = (product) => product?.currency === 'USD' ? '$' + product.price : `${formatPrice(product?.price)} تومان`
