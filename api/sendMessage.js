@@ -1,24 +1,10 @@
-const PRODUCTS = {
-  'google-ai-pro-family': {
-    name: 'اشتراک خانوادگی Google AI Pro',
-    price: 250000,
-    currency: 'TOMAN',
-  },
-  'google-ai-pro-exclusive': {
-    name: 'فعال‌سازی اختصاصی Google AI Pro',
-    price: 600000,
-    currency: 'TOMAN',
-  },
-  'chatgpt-plus-full-warranty': {
-    name: 'ChatGPT Plus — ضمانت کامل',
-    price: 11,
-    currency: 'USD',
-  },
-  'chatgpt-plus-7-day-warranty': {
-    name: 'ChatGPT Plus — ضمانت ۷ روزه',
-    price: 8,
-    currency: 'USD',
-  },
+import fs from 'node:fs'
+
+const PRODUCTS_PATH = new URL('../src/products.json', import.meta.url)
+
+const loadProducts = () => {
+  const products = JSON.parse(fs.readFileSync(PRODUCTS_PATH, 'utf8'))
+  return Object.fromEntries(products.map((product) => [product.id, product]))
 }
 
 const json = (res, status, body) => res.status(status).json(body)
