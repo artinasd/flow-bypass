@@ -105,7 +105,7 @@ function App() {
         <div className="container header-inner">
           <a href="/" className="brand" aria-label="AI.Store">
             <span className="brand-symbol" aria-hidden="true"><Sparkles size={16} /></span>
-            <span>AI.Store</span>
+            <span>NEO AI</span>
           </a>
 
           <nav className="desktop-nav" aria-label="ناوبری اصلی">
