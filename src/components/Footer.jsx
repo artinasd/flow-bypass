@@ -14,7 +14,7 @@ export function Footer() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p className="footer-copyright">&copy; ۱۴۰۳ AI.Store. تمامی حقوق محفوظ است.</p>
+          <p className="footer-copyright">&copy; 1406 NEO AI. تمامی حقوق محفوظ است.</p>
         </div>
       </div>
     </footer>
