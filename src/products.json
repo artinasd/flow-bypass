@@ -5,7 +5,7 @@
     "providerMark": "G",
     "category": "اشتراک هوش مصنوعی",
     "name": "اکانت شخصی 18 ماهه",
-    "price": 598700,
+    "price": 508895,
     "originalPrice": 598700,
     "description": "تجربه کامل‌تر Google AI Pro با Flow و اعتبار ماهانه برای تولید محتوا.",
     "featured": true,
@@ -20,7 +20,8 @@
       "Jules Coding Agent",
       "NotebookLM و Anti Gravity",
       "۵ ترابایت فضای ابری"
-    ]
+    ],
+    "discountPercent": 15
   },
   {
     "id": "google-ai-pro-family",
