@@ -4,6 +4,7 @@ export function Footer() {
       <div className="container footer-container">
         <div className="footer-content">
           <div className="footer-brand">
+            <span className="footer-logo">NEO AI</span>
             <p className="footer-description">اشتراک‌های حرفه‌ای هوش مصنوعی</p>
           </div>
           <div className="footer-links">
