@@ -958,6 +958,85 @@ html.reveal-ready [data-reveal].is-visible{
 }
 .order-success p{max-width:500px;margin:26px 0 33px;color:#818c99;line-height:1.95}
 
+/* CARD-TO-CARD PAYMENT */
+.payment-panel{
+  margin-top:30px;
+  padding:22px;
+  border:1px solid rgba(139,124,255,.18);
+  border-radius:14px;
+  background:linear-gradient(145deg,rgba(139,124,255,.055),rgba(255,255,255,.015));
+}
+.payment-panel-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:18px}
+.payment-panel-head h3{margin:9px 0 0;color:#edf0f4;font-size:18px;line-height:1.5;letter-spacing:-.025em}
+.payment-step{padding-top:4px;color:#687381;font-size:7px;letter-spacing:.14em;direction:ltr}
+.payment-card{
+  position:relative;
+  overflow:hidden;
+  min-height:205px;
+  padding:23px 24px;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:17px;
+  background:
+    radial-gradient(circle at 84% 18%,rgba(65,211,196,.16),transparent 34%),
+    radial-gradient(circle at 14% 100%,rgba(139,124,255,.14),transparent 42%),
+    linear-gradient(135deg,#151d27,#0a1017);
+  box-shadow:0 20px 55px rgba(0,0,0,.28);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.payment-card:after{
+  content:"";
+  position:absolute;
+  width:220px;height:220px;
+  right:-85px;bottom:-125px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:50%;
+  box-shadow:0 0 0 28px rgba(255,255,255,.018),0 0 0 56px rgba(255,255,255,.012);
+}
+.payment-card-top,.payment-card-bottom{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+.payment-card-chip{width:39px;height:28px;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;padding:3px;border:1px solid rgba(255,255,255,.25);border-radius:7px;background:linear-gradient(145deg,#b6c0c4,#68747a);opacity:.9}
+.payment-card-chip i{border:1px solid rgba(0,0,0,.2);border-radius:2px}
+.payment-card-brand{color:#d9e0e6;font-size:9px;font-weight:700;letter-spacing:.2em}
+.payment-card-number{position:relative;z-index:1;margin:23px 0 13px;color:#f7f9fb;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:clamp(18px,3vw,25px);font-weight:600;letter-spacing:.07em;white-space:nowrap;text-shadow:0 2px 15px rgba(0,0,0,.4)}
+.payment-card-bottom{align-items:flex-end}
+.payment-card-bottom>div{display:flex;flex-direction:column;gap:5px}
+.payment-card-bottom span{color:#778390;font-size:7px;letter-spacing:.08em}
+.payment-card-bottom strong{color:#e9edf1;font-size:11px;font-weight:600}
+.payment-bank{text-align:right;direction:rtl}
+.payment-copy-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+.payment-copy{
+  min-width:0;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:13px 14px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:#080c11;
+  color:#cbd2da;
+  text-align:right;
+}
+.payment-copy:hover{border-color:rgba(139,124,255,.38);background:#0b1016}
+.payment-copy>span:first-child{min-width:0;display:flex;flex-direction:column;gap:5px}
+.payment-copy-label{color:#687381;font-size:8px}
+.payment-copy strong{overflow:hidden;color:#e9edf1;font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+.copy-action{display:inline-flex;align-items:center;gap:5px;flex:none;color:#a79eff;font-size:9px}
+.payment-note{display:flex;align-items:flex-start;gap:10px;margin-top:12px;padding:12px 13px;border-radius:9px;background:rgba(139,124,255,.045);color:#818c99}
+.payment-note-mark{flex:none;width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:rgba(139,124,255,.12);color:#aaa0ff}
+.payment-note p{margin:2px 0 0;font-size:10px;line-height:1.85}
+.payment-note strong{color:#cdd2da;font-weight:600}
+.order-payment-submit{min-width:230px}
+
+@media(max-width:700px){
+  .payment-panel{padding:16px;margin-top:25px}
+  .payment-panel-head{gap:10px}
+  .payment-panel-head h3{font-size:15px}
+  .payment-card{min-height:185px;padding:19px}
+  .payment-card-number{font-size:17px;letter-spacing:.045em}
+  .payment-copy-grid{grid-template-columns:1fr}
+  .payment-copy strong{font-size:10px}
+  .order-payment-submit{width:100%!important;min-width:0}
+}
+
 /* RESPONSIVE */
 @media(max-width:1050px){
   .seo-guide-grid{grid-template-columns:1fr;gap:55px}
