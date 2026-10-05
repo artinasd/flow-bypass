@@ -56,7 +56,7 @@ export default async function handler(req, res) {
       '📦 سفارش:',
       ...resolvedItems.map((item) => `• ${item.name} × ${item.quantity} — ${formatItemPrice(item.price * item.quantity)}`),
       '',
-      `💰 مجموع: ${formatItemPrice(total)}`,
+      `💰 مجموع: ${formatItemPrice(total)}`,\n      '💳 پرداخت: کارت‌به‌کارت — اعلام پرداخت توسط مشتری',
       notes ? `📝 توضیحات: ${notes}` : '',
       '',
       `🕐 ${new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Tehran' }).format(new Date())}`,
