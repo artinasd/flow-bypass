@@ -4,10 +4,6 @@ const PRODUCTS_PATH = new URL('../src/products.json', import.meta.url)
 
 const PRODUCTS = Object.fromEntries(JSON.parse(fs.readFileSync(PRODUCTS_PATH, 'utf8')).map((product) => [product.id, product]))
 
-const loadProducts = () => {
-  const products = JSON.parse(fs.readFileSync(PRODUCTS_PATH, 'utf8'))
-  return Object.fromEntries(products.map((product) => [product.id, product]))
-}
 
 const json = (res, status, body) => res.status(status).json(body)
 
