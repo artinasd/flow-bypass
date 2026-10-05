@@ -591,6 +591,50 @@ html.reveal-ready [data-reveal].is-visible{
 }
 .product-footnote span:last-child{color:#8a95a2}
 
+/* SEO GUIDE */
+.seo-guide-section{
+  padding:150px 0;
+  background:#070a0f;
+  border-block:1px solid var(--soft-line);
+}
+.seo-guide-grid{
+  display:grid;
+  grid-template-columns:minmax(280px,.7fr) minmax(0,1.3fr);
+  gap:90px;
+  align-items:start;
+}
+.seo-guide-grid h2{
+  margin-top:18px;
+  color:#eef0f3;
+  font-size:clamp(48px,6vw,86px);
+  line-height:1;
+  letter-spacing:-.07em;
+}
+.seo-guide-grid h2 span{color:#7f8996}
+.seo-guide-copy{
+  display:grid;
+  gap:0;
+  border-top:1px solid var(--line);
+}
+.seo-guide-copy article{
+  padding:30px 0 34px;
+  border-bottom:1px solid var(--line);
+}
+.seo-guide-copy h3{
+  margin:0 0 12px;
+  color:#e9edf1;
+  font-size:18px;
+  line-height:1.5;
+  letter-spacing:-.025em;
+}
+.seo-guide-copy p{
+  max-width:760px;
+  margin:0;
+  color:#7f8996;
+  font-size:14px;
+  line-height:2.05;
+}
+
 /* PROCESS */
 .principles-section{
   padding:155px 0 175px;
@@ -908,6 +952,8 @@ html.reveal-ready [data-reveal].is-visible{
 
 /* RESPONSIVE */
 @media(max-width:1050px){
+  .seo-guide-grid{grid-template-columns:1fr;gap:55px}
+
   .container{width:min(100% - 40px,900px)}
   .hero-grid{grid-template-columns:1fr;gap:30px}
   .hero-copy{padding-bottom:15px}
