@@ -17,7 +17,6 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [cart, setCart] = useState([])
   const [cartReady, setCartReady] = useState(false)
-  const [quantity, setQuantity] = useState(1)
   const [form, setForm] = useState({ name: '', company: '', phone: '', email: '', notes: '' })
   const [status, setStatus] = useState('idle')
   const [orderStage, setOrderStage] = useState('added')
@@ -243,7 +242,6 @@ function App() {
       return [...current, { productId: product.id, quantity: 1 }]
     })
     setSelectedProduct(product)
-    setQuantity(1)
     setForm({ name: '', company: '', phone: '', email: '', notes: '' })
     setStatus('idle')
     setOrderStage('added')
@@ -254,7 +252,6 @@ function App() {
     const firstItem = cartProducts[0]
     if (!firstItem) return
     setSelectedProduct(firstItem.product)
-    setQuantity(firstItem.quantity)
     setStatus('idle')
     setOrderStage('form')
     setCopiedPayment('')
@@ -278,8 +275,6 @@ function App() {
         ? { ...item, quantity: Math.min(99, Math.max(1, nextQuantity)) }
         : item)
     )
-    const item = cart.find((entry) => entry.productId === productId)
-    if (item && selectedProduct?.id === productId) setQuantity(Math.min(99, Math.max(1, nextQuantity)))
   }
 
   const removeFromCart = (productId) => {
@@ -288,7 +283,9 @@ function App() {
       const nextItem = cartProducts.find((item) => item.product.id !== productId)
       if (nextItem) {
         setSelectedProduct(nextItem.product)
-        setQuantity(nextItem.quantity)
+      } else {
+        setSelectedProduct(null)
+        setOrderStage('added')
       }
     }
   }
