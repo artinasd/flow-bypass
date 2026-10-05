@@ -359,6 +359,8 @@ html.reveal-ready [data-reveal].is-visible{
 .product-showcase:nth-child(even) .product-visual{order:2}
 .product-showcase:nth-child(even) .product-info{order:1}
 .product-visual{
+  --product-hue:139,124,255;
+  --product-hue-soft:167,156,255;
   position:relative;
   min-height:610px;
   overflow:hidden;
@@ -368,18 +370,24 @@ html.reveal-ready [data-reveal].is-visible{
   padding:28px;
   color:#fff;
   background:
-    radial-gradient(circle at 50% 45%,rgba(139,124,255,.13),transparent 36%),
+    radial-gradient(circle at 50% 45%,rgba(var(--product-hue),.13),transparent 36%),
     #0a0e14;
   border-inline-end:1px solid var(--line);
 }
 .product-visual-google{
+  --product-hue:123,94,255;
+  --product-hue-soft:167,146,255;
   background:
-    radial-gradient(circle at 52% 43%,rgba(93,121,255,.16),transparent 35%),
+    radial-gradient(circle at 52% 43%,rgba(92,112,255,.16),transparent 35%),
+    radial-gradient(circle at 50% 46%,rgba(123,94,255,.08),transparent 50%),
     #090e15;
 }
 .product-visual-chatgpt{
+  --product-hue:16,163,127;
+  --product-hue-soft:92,220,187;
   background:
-    radial-gradient(circle at 48% 44%,rgba(139,124,255,.12),transparent 35%),
+    radial-gradient(circle at 48% 44%,rgba(16,163,127,.12),transparent 35%),
+    radial-gradient(circle at 50% 46%,rgba(16,163,127,.055),transparent 50%),
     #090e14;
 }
 .product-visual:after{
@@ -391,10 +399,10 @@ html.reveal-ready [data-reveal].is-visible{
   border-radius:50%;
   background:
     radial-gradient(circle,
-      rgba(167,156,255,.18) 0%,
-      rgba(139,124,255,.10) 22%,
-      rgba(93,121,255,.045) 43%,
-      rgba(139,124,255,0) 72%);
+      rgba(var(--product-hue-soft),.19) 0%,
+      rgba(var(--product-hue),.12) 22%,
+      rgba(var(--product-hue),.045) 43%,
+      rgba(var(--product-hue),0) 72%);
   filter:blur(2px);
   opacity:.9;
   animation:orbitalGlow 8s ease-in-out infinite;
@@ -406,7 +414,7 @@ html.reveal-ready [data-reveal].is-visible{
   left:50%;top:47%;
   transform:translate(-50%,-50%);
   border-radius:50%;
-  background:rgba(139,124,255,.12);
+  background:rgba(var(--product-hue),.13);
   filter:blur(52px);
   animation:softGlow 6s ease-in-out infinite;
   pointer-events:none;
