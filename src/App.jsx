@@ -309,7 +309,7 @@ function App() {
 
       <footer className="site-footer">
         <div className="container footer-top">
-          <a href="/" className="brand"><span className="brand-symbol"><Sparkles size={15} /></span><span>AI.Store</span></a>
+          <a href="/" className="brand"><span className="brand-symbol"><Sparkles size={15} /></span><span>NEO AI</span></a>
           <div className="footer-note">فروشگاه دسترسی‌های حرفه‌ای هوش مصنوعی</div>
           <a href="#products" className="footer-link">محصولات <ArrowLeft size={15} /></a>
         </div>
