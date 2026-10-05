@@ -611,8 +611,6 @@ function App() {
         backToForm={backToForm}
         form={form}
         updateField={updateField}
-        quantity={quantity}
-        setQuantity={setQuantity}
         submitOrder={submitOrder}
         total={total}
         payment={PAYMENT}
