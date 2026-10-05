@@ -7,7 +7,7 @@ const formatPrice = (value) => new Intl.NumberFormat('fa-IR').format(value)
 const formatMoney = (product) => product?.currency === 'USD' ? '$' + product.price : `${formatPrice(product?.price)} تومان`
 const formatTotal = (product, total) => product?.currency === 'USD' ? `$${total}` : `${formatPrice(total)} تومان`
 
-const PAYMENT = { cardNumber: '6219861864946750', holder: 'شادی جهانی', bank: 'بلوبانک سامان' }
+const PAYMENT = { cardNumber: atob('NjIxOTg2MTg2NDk0Njc1MA=='), holder: 'شادی جهانی', bank: 'بلوبانک سامان' }
 const formatCardNumber = (value) => value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim()
 const formatCardDigits = (value) => value.replace(/\D/g, '').replace(/(.{4})/g, '$1\u00a0').trim()
 
@@ -16,6 +16,7 @@ function App() {
   const [quantity, setQuantity] = useState(1)
   const [form, setForm] = useState({ name: '', company: '', phone: '', email: '', notes: '' })
   const [status, setStatus] = useState('idle')
+  const [orderStage, setOrderStage] = useState('added')
   const [copiedPayment, setCopiedPayment] = useState('')
 
   const total = useMemo(
@@ -27,6 +28,7 @@ function App() {
     if (status === 'sending') return
     setSelectedProduct(null)
     setStatus('idle')
+    setOrderStage('added')
     setCopiedPayment('')
   }, [status])
 
@@ -179,6 +181,28 @@ function App() {
   const openOrder = (product) => {
     setSelectedProduct(product)
     setQuantity(1)
+    setForm({ name: '', company: '', phone: '', email: '', notes: '' })
+    setStatus('idle')
+    setOrderStage('added')
+    setCopiedPayment('')
+  }
+
+  const continueToForm = () => {
+    setOrderStage('form')
+    setStatus('idle')
+  }
+
+  const continueToPayment = (event) => {
+    event.preventDefault()
+    if (!selectedProduct || status === 'sending') return
+    setOrderStage('payment')
+    setStatus('idle')
+    setCopiedPayment('')
+  }
+
+  const backToForm = () => {
+    if (status === 'sending') return
+    setOrderStage('form')
     setStatus('idle')
     setCopiedPayment('')
   }
@@ -480,6 +504,10 @@ function App() {
         isOpen={!!selectedProduct}
         onClose={closeOrder}
         status={status}
+        orderStage={orderStage}
+        continueToForm={continueToForm}
+        continueToPayment={continueToPayment}
+        backToForm={backToForm}
         form={form}
         updateField={updateField}
         quantity={quantity}
@@ -564,7 +592,7 @@ function selectedCurrency(product, total) {
   return formatTotal(product, total)
 }
 
-function OrderModal({ product, isOpen, onClose, status, form, updateField, quantity, setQuantity, submitOrder, total, payment, copiedPayment, copyPaymentValue }) {
+function OrderModal({ product, isOpen, onClose, status, orderStage, continueToForm, continueToPayment, backToForm, form, updateField, quantity, setQuantity, submitOrder, total, payment, copiedPayment, copyPaymentValue }) {
   if (!isOpen) return null
 
   return (
@@ -580,16 +608,60 @@ function OrderModal({ product, isOpen, onClose, status, form, updateField, quant
             <p>اطلاعات سفارش شما ثبت شد. پرداخت به‌صورت دستی بررسی می‌شود و پس از تأیید، فرایند فعال‌سازی انجام خواهد شد.</p>
             <button className="button button-dark" onClick={onClose}>بازگشت</button>
           </div>
+        ) : orderStage === 'added' ? (
+          <div className="order-added">
+            <span className="added-mark"><Check size={30} /></span>
+            <span className="section-label">به سبد شما اضافه شد</span>
+            <h2>آماده‌ی<br /><span>ثبت سفارش.</span></h2>
+            <div className="added-product">
+              <div className="added-product-icon">
+                <img src={product?.accent === 'google' ? '/google-gemini.svg' : '/openai-logo.svg'} alt="" />
+              </div>
+              <div>
+                <strong>{product?.name}</strong>
+                <span>{product?.provider} · {formatMoney(product)}</span>
+              </div>
+            </div>
+            <p>حالا می‌توانید اطلاعات سفارش را وارد کنید یا به محصولات برگردید.</p>
+            <div className="added-actions">
+              <button className="button button-dark" type="button" onClick={continueToForm}>
+                تکمیل خرید
+                <ArrowLeft size={17} />
+              </button>
+              <button className="text-action added-continue" type="button" onClick={onClose}>
+                ادامه خرید
+                <ArrowLeft size={17} />
+              </button>
+            </div>
+          </div>
         ) : (
           <>
             <div className="order-heading">
-              <span className="section-label">ثبت درخواست</span>
+              <div className="order-step-top">
+                <span className="section-label">{orderStage === 'payment' ? 'مرحله دوم · پرداخت' : 'مرحله اول · اطلاعات سفارش'}</span>
+                {orderStage === 'payment' && (
+                  <button className="order-back-link" type="button" onClick={backToForm}>
+                    <ArrowUpLeft size={14} />
+                    ویرایش اطلاعات
+                  </button>
+                )}
+              </div>
               <h2 id="order-title">{product?.name}</h2>
               <p>{product?.provider}</p>
             </div>
 
-            <div className="order-summary">
-              <div>
+            <div className="order-product-overview">
+              <div className="order-overview-product">
+                <div className="order-overview-icon">
+                  <img src={product?.accent === 'google' ? '/google-gemini.svg' : '/openai-logo.svg'} alt="" />
+                </div>
+                <div>
+                  <span>محصول انتخاب‌شده</span>
+                  <strong>{product?.name}</strong>
+                  <small>{product?.provider}</small>
+                </div>
+              </div>
+              <div className="order-overview-price">
                 <span>قیمت واحد</span>
                 <strong>{formatMoney(product)}</strong>
               </div>
@@ -600,75 +672,92 @@ function OrderModal({ product, isOpen, onClose, status, form, updateField, quant
               </div>
             </div>
 
-            <div className="payment-panel">
-              <div className="payment-panel-head">
-                <div>
-                  <span className="section-label">پرداخت کارت‌به‌کارت</span>
-                  <h3>مبلغ را انتقال دهید، سپس سفارش را ثبت کنید.</h3>
-                </div>
-                <span className="payment-step">PAY / 01</span>
-              </div>
+            {orderStage === 'payment' ? (
+              <div className="payment-stage">
+                <div className="payment-panel">
+                  <div className="payment-panel-head">
+                    <div>
+                      <span className="section-label">پرداخت کارت‌به‌کارت</span>
+                      <h3>مبلغ را انتقال دهید، سپس سفارش را ثبت کنید.</h3>
+                    </div>
+                    <span className="payment-step">PAY / 02</span>
+                  </div>
 
-              <div className="payment-card">
-                <div className="payment-card-top">
-                  <span className="payment-card-chip" aria-hidden="true"><i /><i /><i /></span>
-                  <span className="payment-card-brand">NEO PAY</span>
+                  <div className="payment-card">
+                    <div className="payment-card-top">
+                      <span className="payment-card-chip" aria-hidden="true"><i /><i /><i /></span>
+                      <span className="payment-card-brand">NEO PAY</span>
+                    </div>
+                    <div className="payment-card-number" dir="ltr" aria-label="شماره کارت">
+                      {formatCardDigits(payment.cardNumber)}
+                    </div>
+                    <div className="payment-card-bottom">
+                      <div><span>دارنده کارت</span><strong>{payment.holder}</strong></div>
+                      <div className="payment-bank"><span>بانک</span><strong>{payment.bank}</strong></div>
+                    </div>
+                  </div>
+
+                  <div className="payment-copy-grid">
+                    <button type="button" className="payment-copy" onClick={() => copyPaymentValue('card', payment.cardNumber)}>
+                      <span><span className="payment-copy-label">شماره کارت</span><strong dir="ltr">{formatCardNumber(payment.cardNumber)}</strong></span>
+                      <span className="copy-action">{copiedPayment === 'card' ? <><Check size={15} /> کپی شد</> : <><Copy size={15} /> کپی</>}</span>
+                    </button>
+                    <button type="button" className="payment-copy payment-amount-copy" onClick={() => copyPaymentValue('amount', String(total))}>
+                      <span><span className="payment-copy-label">مبلغ دقیق انتقال</span><strong>{formatTotal(product, total)}</strong></span>
+                      <span className="copy-action">{copiedPayment === 'amount' ? <><Check size={15} /> کپی شد</> : <><Copy size={15} /> کپی مبلغ</>}</span>
+                    </button>
+                  </div>
+
+                  <div className="payment-note">
+                    <span className="payment-note-mark"><Check size={14} /></span>
+                    <p>پس از انتقال <strong>{formatTotal(product, total)}</strong> به کارت بالا، روی «پرداخت کردم، ثبت سفارش» بزنید. پرداخت شما در این مرحله به‌صورت دستی بررسی می‌شود.</p>
+                  </div>
                 </div>
-                <div className="payment-card-number" dir="ltr" aria-label="شماره کارت">
-                  {formatCardDigits(payment.cardNumber)}
-                </div>
-                <div className="payment-card-bottom">
-                  <div><span>دارنده کارت</span><strong>{payment.holder}</strong></div>
-                  <div className="payment-bank"><span>بانک</span><strong>{payment.bank}</strong></div>
+
+                {status === 'error' && <div className="order-error" role="alert">ارسال سفارش انجام نشد. لطفاً دوباره تلاش کنید.</div>}
+
+                <div className="order-submit">
+                  <div><span>مجموع</span><strong>{selectedCurrency(product, total)}</strong></div>
+                  <button className="button button-dark order-payment-submit" disabled={status === 'sending'} type="button" onClick={submitOrder}>
+                    {status === 'sending' ? 'در حال ثبت...' : 'پرداخت کردم، ثبت سفارش'}
+                    {status !== 'sending' && <ArrowLeft size={17} />}
+                  </button>
                 </div>
               </div>
+            ) : (
+              <form className="order-form" onSubmit={continueToPayment}>
+                <div className="form-stage-intro">
+                  <span className="section-label">جزئیات سفارش</span>
+                  <p>اطلاعات خود را وارد کنید. جزئیات پرداخت در مرحله بعد نمایش داده می‌شود.</p>
+                </div>
 
-              <div className="payment-copy-grid">
-                <button type="button" className="payment-copy" onClick={() => copyPaymentValue('card', payment.cardNumber)}>
-                  <span><span className="payment-copy-label">شماره کارت</span><strong dir="ltr">{formatCardNumber(payment.cardNumber)}</strong></span>
-                  <span className="copy-action">{copiedPayment === 'card' ? <><Check size={15} /> کپی شد</> : <><Copy size={15} /> کپی</>}</span>
-                </button>
-                <button type="button" className="payment-copy payment-amount-copy" onClick={() => copyPaymentValue('amount', String(total))}>
-                  <span><span className="payment-copy-label">مبلغ دقیق انتقال</span><strong>{formatTotal(product, total)}</strong></span>
-                  <span className="copy-action">{copiedPayment === 'amount' ? <><Check size={15} /> کپی شد</> : <><Copy size={15} /> کپی مبلغ</>}</span>
-                </button>
-              </div>
-
-              <div className="payment-note">
-                <span className="payment-note-mark"><Check size={14} /></span>
-                <p>پس از انتقال <strong>{formatTotal(product, total)}</strong> به کارت بالا، روی «پرداخت کردم، ثبت سفارش» بزنید. پرداخت شما در این مرحله به‌صورت دستی بررسی می‌شود.</p>
-              </div>
-            </div>
-
-            <form className="order-form" onSubmit={submitOrder}>
-              <div className="form-two">
-                <label>نام و نام خانوادگی *
-                  <input value={form.name} onChange={(event) => updateField('name', event.target.value)} required autoComplete="name" />
+                <div className="form-two">
+                  <label>نام و نام خانوادگی *
+                    <input value={form.name} onChange={(event) => updateField('name', event.target.value)} required autoComplete="name" />
+                  </label>
+                  <label>شماره تماس *
+                    <input value={form.phone} onChange={(event) => updateField('phone', event.target.value)} required type="tel" dir="ltr" autoComplete="tel" />
+                  </label>
+                </div>
+                <label>سازمان یا کسب‌وکار <span>اختیاری</span>
+                  <input value={form.company} onChange={(event) => updateField('company', event.target.value)} autoComplete="organization" />
                 </label>
-                <label>شماره تماس *
-                  <input value={form.phone} onChange={(event) => updateField('phone', event.target.value)} required type="tel" dir="ltr" autoComplete="tel" />
+                <label>ایمیل <span>اختیاری</span>
+                  <input value={form.email} onChange={(event) => updateField('email', event.target.value)} type="email" dir="ltr" autoComplete="email" />
                 </label>
-              </div>
-              <label>سازمان یا کسب‌وکار <span>اختیاری</span>
-                <input value={form.company} onChange={(event) => updateField('company', event.target.value)} autoComplete="organization" />
-              </label>
-              <label>ایمیل <span>اختیاری</span>
-                <input value={form.email} onChange={(event) => updateField('email', event.target.value)} type="email" dir="ltr" autoComplete="email" />
-              </label>
-              <label>توضیحات <span>اختیاری</span>
-                <textarea value={form.notes} onChange={(event) => updateField('notes', event.target.value)} rows="3" />
-              </label>
+                <label>توضیحات <span>اختیاری</span>
+                  <textarea value={form.notes} onChange={(event) => updateField('notes', event.target.value)} rows="3" />
+                </label>
 
-              {status === 'error' && <div className="order-error" role="alert">ارسال سفارش انجام نشد. لطفاً دوباره تلاش کنید.</div>}
-
-              <div className="order-submit">
-                <div><span>مجموع</span><strong>{selectedCurrency(product, total)}</strong></div>
-                <button className="button button-dark order-payment-submit" disabled={status === 'sending'} type="submit">
-                  {status === 'sending' ? 'در حال ثبت...' : 'پرداخت کردم، ثبت سفارش'}
-                  {status !== 'sending' && <ArrowLeft size={17} />}
-                </button>
-              </div>
-            </form>
+                <div className="order-submit">
+                  <div><span>مجموع سفارش</span><strong>{selectedCurrency(product, total)}</strong></div>
+                  <button className="button button-dark order-payment-submit" type="submit">
+                    ادامه به پرداخت
+                    <ArrowLeft size={17} />
+                  </button>
+                </div>
+              </form>
+            )}
           </>
         )}
       </div>
