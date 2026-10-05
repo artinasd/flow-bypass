@@ -5,7 +5,9 @@ import './App.css'
 
 const formatPrice = (value) => new Intl.NumberFormat('fa-IR').format(value)
 const formatMoney = (product) => product?.currency === 'USD' ? '$' + product.price : `${formatPrice(product?.price)} تومان`
-const formatTotal = (product, total) => product?.currency === 'USD' ? `$${total}` : `${formatPrice(total)} تومان`
+const formatTotal = (product, total) => product?.currency === 'USD' ? `${total}` : `${formatPrice(total)} تومان`
+const CART_STORAGE_KEY = 'neo-ai-cart'
+const CART_TTL = 24 * 60 * 60 * 1000
 
 const PAYMENT = { cardNumber: atob('NjIxOTg2MTg2NDk0Njc1MA=='), holder: 'شادی جهانی', bank: 'بلوبانک سامان' }
 const formatCardNumber = (value) => value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim()
@@ -13,15 +15,29 @@ const formatCardDigits = (value) => value.replace(/\D/g, '').replace(/(.{4})/g, 
 
 function App() {
   const [selectedProduct, setSelectedProduct] = useState(null)
+  const [cart, setCart] = useState([])
+  const [cartReady, setCartReady] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const [form, setForm] = useState({ name: '', company: '', phone: '', email: '', notes: '' })
   const [status, setStatus] = useState('idle')
   const [orderStage, setOrderStage] = useState('added')
   const [copiedPayment, setCopiedPayment] = useState('')
 
+  const cartProducts = useMemo(
+    () => cart
+      .map((item) => ({ ...item, product: products.find((product) => product.id === item.productId) }))
+      .filter((item) => item.product),
+    [cart],
+  )
+
+  const cartCount = useMemo(
+    () => cart.reduce((sum, item) => sum + item.quantity, 0),
+    [cart],
+  )
+
   const total = useMemo(
-    () => selectedProduct ? selectedProduct.price * quantity : 0,
-    [selectedProduct, quantity],
+    () => cartProducts.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    [cartProducts],
   )
 
   const closeOrder = useCallback(() => {
@@ -31,6 +47,44 @@ function App() {
     setOrderStage('added')
     setCopiedPayment('')
   }, [status])
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(CART_STORAGE_KEY) || 'null')
+      if (!stored || !Array.isArray(stored.items)) {
+        setCart([])
+        setCartReady(true)
+        return
+      }
+
+      if (!stored.updatedAt || Date.now() - stored.updatedAt > CART_TTL) {
+        window.localStorage.removeItem(CART_STORAGE_KEY)
+        setCart([])
+        setCartReady(true)
+        return
+      }
+
+      const validItems = stored.items
+        .filter((item) => products.some((product) => product.id === item.productId))
+        .map((item) => ({ productId: item.productId, quantity: Math.min(99, Math.max(1, Number(item.quantity) || 1)) }))
+
+      setCart(validItems)
+    } catch {
+      window.localStorage.removeItem(CART_STORAGE_KEY)
+      setCart([])
+    } finally {
+      setCartReady(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!cartReady) return
+    if (!cart.length) {
+      window.localStorage.removeItem(CART_STORAGE_KEY)
+      return
+    }
+    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({ items: cart, updatedAt: Date.now() }))
+  }, [cart, cartReady])
 
   useEffect(() => {
     const revealItems = document.querySelectorAll('[data-reveal]')
@@ -179,9 +233,35 @@ function App() {
   }, [selectedProduct, closeOrder])
 
   const openOrder = (product) => {
+    setCart((current) => {
+      const existing = current.find((item) => item.productId === product.id)
+      if (existing) {
+        return current.map((item) => item.productId === product.id
+          ? { ...item, quantity: Math.min(99, item.quantity + 1) }
+          : item)
+      }
+      return [...current, { productId: product.id, quantity: 1 }]
+    })
     setSelectedProduct(product)
     setQuantity(1)
     setForm({ name: '', company: '', phone: '', email: '', notes: '' })
+    setStatus('idle')
+    setOrderStage('added')
+    setCopiedPayment('')
+  }
+
+  const openCart = () => {
+    const firstItem = cartProducts[0]
+    if (!firstItem) return
+    setSelectedProduct(firstItem.product)
+    setQuantity(firstItem.quantity)
+    setStatus('idle')
+    setOrderStage('form')
+    setCopiedPayment('')
+  }
+
+  const continueShopping = () => {
+    setSelectedProduct(null)
     setStatus('idle')
     setOrderStage('added')
     setCopiedPayment('')
@@ -192,9 +272,30 @@ function App() {
     setStatus('idle')
   }
 
+  const updateCartQuantity = (productId, nextQuantity) => {
+    setCart((current) => current
+      .map((item) => item.productId === productId
+        ? { ...item, quantity: Math.min(99, Math.max(1, nextQuantity)) }
+        : item)
+    )
+    const item = cart.find((entry) => entry.productId === productId)
+    if (item && selectedProduct?.id === productId) setQuantity(Math.min(99, Math.max(1, nextQuantity)))
+  }
+
+  const removeFromCart = (productId) => {
+    setCart((current) => current.filter((item) => item.productId !== productId))
+    if (selectedProduct?.id === productId) {
+      const nextItem = cartProducts.find((item) => item.product.id !== productId)
+      if (nextItem) {
+        setSelectedProduct(nextItem.product)
+        setQuantity(nextItem.quantity)
+      }
+    }
+  }
+
   const continueToPayment = (event) => {
     event.preventDefault()
-    if (!selectedProduct || status === 'sending') return
+    if (!cart.length || status === 'sending') return
     setOrderStage('payment')
     setStatus('idle')
     setCopiedPayment('')
@@ -232,11 +333,12 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customer: { ...form },
-          items: [{ productId: selectedProduct.id, quantity }],
+          items: cart.map((item) => ({ productId: item.productId, quantity: item.quantity })),
         }),
       })
 
       if (!response.ok) throw new Error('Failed to send')
+      setCart([])
       setStatus('success')
     } catch {
       setStatus('error')
@@ -258,10 +360,11 @@ function App() {
             <a href="#faq">سوالات</a>
           </nav>
 
-          <a className="header-action" href="#products">
-            مشاهده محصولات
+          <button className="header-action cart-header-action" type="button" onClick={openCart} disabled={!cartCount} aria-label={cartCount ? 'باز کردن سبد خرید' : 'سبد خرید خالی'}>
+            <span>سبد خرید</span>
+            <span className="cart-count">{formatPrice(cartCount)}</span>
             <ArrowDownLeft size={17} />
-          </a>
+          </button>
         </div>
       </header>
 
@@ -506,6 +609,7 @@ function App() {
         status={status}
         orderStage={orderStage}
         continueToForm={continueToForm}
+        continueShopping={continueShopping}
         continueToPayment={continueToPayment}
         backToForm={backToForm}
         form={form}
@@ -515,6 +619,10 @@ function App() {
         submitOrder={submitOrder}
         total={total}
         payment={PAYMENT}
+        cartProducts={cartProducts}
+        cartCount={cartCount}
+        updateCartQuantity={updateCartQuantity}
+        removeFromCart={removeFromCart}
         copiedPayment={copiedPayment}
         copyPaymentValue={copyPaymentValue}
       />
@@ -570,7 +678,7 @@ function ProductShowcase({ product, index, onOrder, revealDelay = 0 }) {
         <div className="product-buy">
           <div><span>قیمت / واحد</span><strong>{formatMoney(product)}</strong></div>
           <button className="button button-dark" onClick={() => onOrder(product)}>
-            {product.featured ? 'فعال‌سازی' : 'ثبت سفارش'}<ArrowLeft size={17} />
+            {product.featured ? 'فعال‌سازی' : 'افزودن به سبد'}<ArrowLeft size={17} />
           </button>
         </div>
         <div className="product-footnote"><span>DIRECT REQUEST</span><span>{String(index + 1).padStart(2, '0')} / {String(products.length).padStart(2, '0')}</span></div>
@@ -592,7 +700,7 @@ function selectedCurrency(product, total) {
   return formatTotal(product, total)
 }
 
-function OrderModal({ product, isOpen, onClose, status, orderStage, continueToForm, continueToPayment, backToForm, form, updateField, quantity, setQuantity, submitOrder, total, payment, copiedPayment, copyPaymentValue }) {
+function OrderModal({ product, isOpen, onClose, status, orderStage, continueToForm, continueShopping, continueToPayment, backToForm, form, updateField, submitOrder, total, payment, copiedPayment, copyPaymentValue, cartProducts, cartCount, updateCartQuantity, removeFromCart }) {
   if (!isOpen) return null
 
   return (
@@ -612,7 +720,7 @@ function OrderModal({ product, isOpen, onClose, status, orderStage, continueToFo
           <div className="order-added">
             <span className="added-mark"><Check size={30} /></span>
             <span className="section-label">به سبد شما اضافه شد</span>
-            <h2>آماده‌ی<br /><span>ثبت سفارش.</span></h2>
+            <h2>سبد شما<br /><span>آماده است.</span></h2>
             <div className="added-product">
               <div className="added-product-icon">
                 <img src={product?.accent === 'google' ? '/google-gemini.svg' : '/openai-logo.svg'} alt="" />
@@ -622,13 +730,17 @@ function OrderModal({ product, isOpen, onClose, status, orderStage, continueToFo
                 <span>{product?.provider} · {formatMoney(product)}</span>
               </div>
             </div>
-            <p>حالا می‌توانید اطلاعات سفارش را وارد کنید یا به محصولات برگردید.</p>
+            <div className="cart-added-meta">
+              <span>{formatPrice(cartCount)} محصول در سبد</span>
+              <strong>{formatTotal(product, total)}</strong>
+            </div>
+            <p>می‌توانید محصولات بیشتری اضافه کنید یا سبد را برای تکمیل خرید باز کنید.</p>
             <div className="added-actions">
               <button className="button button-dark" type="button" onClick={continueToForm}>
                 تکمیل خرید
                 <ArrowLeft size={17} />
               </button>
-              <button className="text-action added-continue" type="button" onClick={onClose}>
+              <button className="text-action added-continue" type="button" onClick={continueShopping}>
                 ادامه خرید
                 <ArrowLeft size={17} />
               </button>
@@ -638,7 +750,7 @@ function OrderModal({ product, isOpen, onClose, status, orderStage, continueToFo
           <>
             <div className="order-heading">
               <div className="order-step-top">
-                <span className="section-label">{orderStage === 'payment' ? 'مرحله دوم · پرداخت' : 'مرحله اول · اطلاعات سفارش'}</span>
+                <span className="section-label">مرحله اول · اطلاعات سفارش</span>
                 {orderStage === 'payment' && (
                   <button className="order-back-link" type="button" onClick={backToForm}>
                     <ArrowUpLeft size={14} />
@@ -646,30 +758,34 @@ function OrderModal({ product, isOpen, onClose, status, orderStage, continueToFo
                   </button>
                 )}
               </div>
-              <h2 id="order-title">{product?.name}</h2>
-              <p>{product?.provider}</p>
+              <h2 id="order-title">تکمیل خرید</h2>
+              <p>{formatPrice(cartCount)} محصول در سبد شما</p>
             </div>
 
-            <div className="order-product-overview">
-              <div className="order-overview-product">
-                <div className="order-overview-icon">
-                  <img src={product?.accent === 'google' ? '/google-gemini.svg' : '/openai-logo.svg'} alt="" />
+            <div className="cart-list">
+              {cartProducts.map((item) => (
+                <div className="cart-line-item" key={item.product.id}>
+                  <div className="cart-line-product">
+                    <div className="order-overview-icon">
+                      <img src={item.product.accent === 'google' ? '/google-gemini.svg' : '/openai-logo.svg'} alt="" />
+                    </div>
+                    <div>
+                      <strong>{item.product.name}</strong>
+                      <span>{item.product.provider}</span>
+                    </div>
+                  </div>
+                  <div className="cart-line-price">
+                    <span>{formatMoney(item.product)}</span>
+                    <strong>{formatTotal(item.product, item.product.price * item.quantity)}</strong>
+                  </div>
+                  <div className="quantity-selector">
+                    <button type="button" onClick={() => updateCartQuantity(item.product.id, item.quantity - 1)} aria-label="کاهش تعداد"><Minus size={16} /></button>
+                    <span>{formatPrice(item.quantity)}</span>
+                    <button type="button" onClick={() => updateCartQuantity(item.product.id, item.quantity + 1)} aria-label="افزایش تعداد"><Plus size={16} /></button>
+                  </div>
+                  <button className="cart-remove" type="button" onClick={() => removeFromCart(item.product.id)} aria-label="حذف محصول"><X size={15} /></button>
                 </div>
-                <div>
-                  <span>محصول انتخاب‌شده</span>
-                  <strong>{product?.name}</strong>
-                  <small>{product?.provider}</small>
-                </div>
-              </div>
-              <div className="order-overview-price">
-                <span>قیمت واحد</span>
-                <strong>{formatMoney(product)}</strong>
-              </div>
-              <div className="quantity-selector">
-                <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} aria-label="کاهش تعداد"><Minus size={16} /></button>
-                <span>{formatPrice(quantity)}</span>
-                <button type="button" onClick={() => setQuantity((value) => Math.min(99, value + 1))} aria-label="افزایش تعداد"><Plus size={16} /></button>
-              </div>
+              ))}
             </div>
 
             {orderStage === 'payment' ? (
@@ -703,21 +819,21 @@ function OrderModal({ product, isOpen, onClose, status, orderStage, continueToFo
                       <span className="copy-action">{copiedPayment === 'card' ? <><Check size={15} /> کپی شد</> : <><Copy size={15} /> کپی</>}</span>
                     </button>
                     <button type="button" className="payment-copy payment-amount-copy" onClick={() => copyPaymentValue('amount', String(total))}>
-                      <span><span className="payment-copy-label">مبلغ دقیق انتقال</span><strong>{formatTotal(product, total)}</strong></span>
+                      <span><span className="payment-copy-label">مبلغ دقیق انتقال</span><strong>{formatTotal(cartProducts[0]?.product, total)}</strong></span>
                       <span className="copy-action">{copiedPayment === 'amount' ? <><Check size={15} /> کپی شد</> : <><Copy size={15} /> کپی مبلغ</>}</span>
                     </button>
                   </div>
 
                   <div className="payment-note">
                     <span className="payment-note-mark"><Check size={14} /></span>
-                    <p>پس از انتقال <strong>{formatTotal(product, total)}</strong> به کارت بالا، روی «پرداخت کردم، ثبت سفارش» بزنید. پرداخت شما در این مرحله به‌صورت دستی بررسی می‌شود.</p>
+                    <p>پس از انتقال <strong>{formatTotal(cartProducts[0]?.product, total)}</strong> به کارت بالا، روی «پرداخت کردم، ثبت سفارش» بزنید. پرداخت شما در این مرحله به‌صورت دستی بررسی می‌شود.</p>
                   </div>
                 </div>
 
                 {status === 'error' && <div className="order-error" role="alert">ارسال سفارش انجام نشد. لطفاً دوباره تلاش کنید.</div>}
 
                 <div className="order-submit">
-                  <div><span>مجموع</span><strong>{selectedCurrency(product, total)}</strong></div>
+                  <div><span>مجموع</span><strong>{formatTotal(cartProducts[0]?.product, total)}</strong></div>
                   <button className="button button-dark order-payment-submit" disabled={status === 'sending'} type="button" onClick={submitOrder}>
                     {status === 'sending' ? 'در حال ثبت...' : 'پرداخت کردم، ثبت سفارش'}
                     {status !== 'sending' && <ArrowLeft size={17} />}
@@ -750,7 +866,7 @@ function OrderModal({ product, isOpen, onClose, status, orderStage, continueToFo
                 </label>
 
                 <div className="order-submit">
-                  <div><span>مجموع سفارش</span><strong>{selectedCurrency(product, total)}</strong></div>
+                  <div><span>مجموع سفارش</span><strong>{formatTotal(cartProducts[0]?.product, total)}</strong></div>
                   <button className="button button-dark order-payment-submit" type="submit">
                     ادامه به پرداخت
                     <ArrowLeft size={17} />
@@ -764,5 +880,4 @@ function OrderModal({ product, isOpen, onClose, status, orderStage, continueToFo
     </div>
   )
 }
-
 export default App
