@@ -103,7 +103,7 @@ function App() {
     <div className="site-shell">
       <header className="site-header">
         <div className="container header-inner">
-          <a href="/" className="brand" aria-label="AI.Store">
+          <a href="/" className="brand" aria-label="NEO AI">
             <span className="brand-symbol" aria-hidden="true"><Sparkles size={16} /></span>
             <span>NEO AI</span>
           </a>
@@ -314,7 +314,7 @@ function App() {
           <a href="#products" className="footer-link">محصولات <ArrowLeft size={15} /></a>
         </div>
         <div className="container footer-bottom">
-          <span>© ۱۴۰۵ AI.Store</span>
+          <span>© ۱۴۰۵ NEO AI · تمامی حقوق محفوظ است.</span>
           <span>ساخته‌شده برای انتخاب بهتر.</span>
         </div>
       </footer>
