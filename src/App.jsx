@@ -55,6 +55,109 @@ function App() {
   }, [])
 
   useEffect(() => {
+    const siteUrl = window.location.origin + '/'
+    const existingCanonical = document.querySelector('link[rel="canonical"]')
+    const canonical = existingCanonical || document.createElement('link')
+    canonical.rel = 'canonical'
+    canonical.href = siteUrl
+    if (!existingCanonical) document.head.appendChild(canonical)
+
+    const schema = {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'WebSite',
+          '@id': siteUrl + '#website',
+          name: 'NEO AI',
+          alternateName: 'NEO AI',
+          description: 'فروشگاه اشتراک‌های حرفه‌ای هوش مصنوعی',
+          url: siteUrl,
+        },
+        {
+          '@type': 'Organization',
+          '@id': siteUrl + '#organization',
+          name: 'NEO AI',
+          url: siteUrl,
+          logo: siteUrl + 'favicon.svg',
+        },
+        {
+          '@type': 'ItemList',
+          '@id': siteUrl + '#products',
+          name: 'اشتراک‌های حرفه‌ای هوش مصنوعی NEO AI',
+          itemListElement: products.map((product, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            item: {
+              '@type': 'Product',
+              name: product.name + ' — ' + product.provider,
+              description: product.description,
+              brand: { '@type': 'Brand', name: product.provider },
+              sku: product.id,
+              offers: {
+                '@type': 'Offer',
+                priceCurrency: product.currency === 'USD' ? 'USD' : 'IRR',
+                price: String(product.currency === 'USD' ? product.price : product.price * 10),
+                availability: 'https://schema.org/InStock',
+              },
+            },
+          })),
+        },
+        {
+          '@type': 'FAQPage',
+          '@id': siteUrl + '#faq',
+          mainEntity: [
+            {
+              '@type': 'Question',
+              name: 'آیا پرداخت به‌صورت آنلاین انجام می‌شود؟',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'خیر. سایت برای انتخاب محصول و ثبت درخواست سفارش طراحی شده است. پس از ثبت موفق، برای هماهنگی پرداخت و فعال‌سازی با شما در ارتباط خواهیم بود.',
+              },
+            },
+            {
+              '@type': 'Question',
+              name: 'بعد از ثبت سفارش چه اتفاقی می‌افتد؟',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'درخواست شما دریافت می‌شود و اطلاعات لازم برای ادامه فرایند با شما هماهنگ خواهد شد.',
+              },
+            },
+            {
+              '@type': 'Question',
+              name: 'آیا محصولات دیگری هم اضافه می‌شوند؟',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'بله. ساختار فروشگاه برای چند سرویس و اکوسیستم مختلف طراحی شده و کاتالوگ به مرور گسترش پیدا می‌کند.',
+              },
+            },
+            {
+              '@type': 'Question',
+              name: 'اگر درباره انتخاب محصول مطمئن نباشم چه؟',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'می‌توانید هنگام ثبت درخواست توضیحات خود را بنویسید تا قبل از ادامه فرایند، انتخاب مناسب‌تر برایتان بررسی شود.',
+              },
+            },
+          ],
+        },
+      ],
+    }
+
+    let script = document.getElementById('neo-ai-structured-data')
+    if (!script) {
+      script = document.createElement('script')
+      script.id = 'neo-ai-structured-data'
+      script.type = 'application/ld+json'
+      document.head.appendChild(script)
+    }
+    script.textContent = JSON.stringify(schema)
+
+    return () => {
+      if (script.parentNode) script.parentNode.removeChild(script)
+    }
+  }, [])
+
+  useEffect(() => {
     document.body.style.overflow = selectedProduct ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [selectedProduct])
