@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useScroll } from 'framer-motion'
+import Lenis from 'lenis'
 import { ArrowDownLeft, ArrowUpLeft, Check, ChevronDown, Minus, Plus, X, ArrowLeft, Sparkles, ShieldCheck, Copy } from 'lucide-react'
 import products from './products.json'
 import './App.css'
@@ -15,6 +16,78 @@ const CART_TTL = 24 * 60 * 60 * 1000
 const PAYMENT = { cardNumber: atob('NjIxOTg2MTg2NDk0Njc1MA=='), holder: 'شادی جهانی', bank: 'بلوبانک سامان' }
 const formatCardNumber = (value) => value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim()
 const formatCardDigits = (value) => value.replace(/\D/g, '').replace(/(.{4})/g, '$1\u00a0').trim()
+
+export const triggerHapticAndParticles = (e, color = '#ff7ccf') => {
+  if (typeof window === 'undefined') return;
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  
+  if (navigator.vibrate) {
+    navigator.vibrate(50);
+  }
+
+  if (!e || reducedMotion) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const x = e.clientX || rect.left + rect.width / 2;
+  const y = e.clientY || rect.top + rect.height / 2;
+
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.className = 'click-particle';
+    p.style.left = x + 'px';
+    p.style.top = y + 'px';
+    p.style.backgroundColor = color;
+    document.body.appendChild(p);
+
+    const angle = (Math.PI * 2 * i) / 12;
+    const velocity = 40 + Math.random() * 60;
+    const tx = Math.cos(angle) * velocity;
+    const ty = Math.sin(angle) * velocity;
+
+    p.animate([
+      { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(0)`, opacity: 0 }
+    ], {
+      duration: 600 + Math.random() * 200,
+      easing: 'cubic-bezier(0.25, 1, 0.5, 1)'
+    }).onfinish = () => p.remove();
+  }
+}
+
+function Atmosphere() {
+  const { scrollY } = useScroll();
+  const mouseX = useMotionValue(0.5);
+  const mouseY = useMotionValue(0.5);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      mouseX.set(e.clientX / window.innerWidth);
+      mouseY.set(e.clientY / window.innerHeight);
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [mouseX, mouseY]);
+
+  const bgX = useTransform(mouseX, [0, 1], ['-5%', '5%']);
+  const bgY = useTransform(mouseY, [0, 1], ['-5%', '5%']);
+  const scrollYTransform = useTransform(scrollY, [0, 3000], [0, 15]);
+  const combinedY = useTransform(() => `calc(${bgY.get()} - ${scrollYTransform.get()}%)`);
+
+  return (
+    <>
+      <svg className="noise-overlay" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+        <filter id="noiseFilter">
+          <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#noiseFilter)" />
+      </svg>
+      <motion.div 
+        className="ambient-mesh" 
+        style={{ x: bgX, y: combinedY }} 
+        aria-hidden="true"
+      />
+    </>
+  );
+}
 
 function App() {
   const [selectedProduct, setSelectedProduct] = useState(null) // used for OrderModal
@@ -91,6 +164,32 @@ function App() {
     } finally {
       setCartReady(true)
     }
+  }, [])
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), 
+      direction: 'vertical',
+      gestureDirection: 'vertical',
+      smooth: true,
+      smoothTouch: false,
+    });
+    
+    window.lenis = lenis;
+
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    return () => {
+      lenis.destroy();
+      delete window.lenis;
+    };
   }, [])
 
   useEffect(() => {
@@ -236,9 +335,25 @@ function App() {
   }, [])
 
   useEffect(() => {
-    document.body.style.overflow = selectedProduct ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [selectedProduct])
+    const isModalOpen = selectedProduct || multiMethodProduct;
+    document.body.style.overflow = isModalOpen ? 'hidden' : ''
+    
+    if (window.lenis) {
+      if (isModalOpen) window.lenis.stop();
+      else window.lenis.start();
+    }
+
+    if (multiMethodProduct) {
+      document.body.classList.add('has-open-modal')
+    } else {
+      document.body.classList.remove('has-open-modal')
+    }
+    return () => { 
+      document.body.style.overflow = ''
+      document.body.classList.remove('has-open-modal')
+      if (window.lenis) window.lenis.start();
+    }
+  }, [selectedProduct, multiMethodProduct])
 
   useEffect(() => {
     const handleEscape = (event) => {
@@ -248,19 +363,29 @@ function App() {
     return () => window.removeEventListener('keydown', handleEscape)
   }, [selectedProduct, closeOrder])
 
-  const handleProductAction = (product) => {
+  useEffect(() => {
+    const prefetch = () => import('./components/ThreeDCard').catch(() => {});
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(prefetch);
+    } else {
+      setTimeout(prefetch, 1500);
+    }
+  }, []);
+
+  const handleProductAction = (e, product) => {
     if (!product.methods || product.methods.length === 1) {
       // Direct order flow
       const method = product.methods ? product.methods[0] : null;
-      openOrder(product, method);
+      openOrder(e, product, method);
     } else {
       // Open multi-method panel
+      triggerHapticAndParticles(e, product.accent === 'google' ? '#4285f4' : '#10a37f');
       setMultiMethodProduct(product);
       if (window.dataLayer) window.dataLayer.push({ event: 'panel_open', productId: product.id });
     }
   }
 
-  const openOrder = (product, method = null) => {
+  const openOrder = (e, product, method = null) => {
     setCart((current) => {
       const existing = current.find((item) => item.productId === product.id && item.methodId === method?.id)
       if (existing) {
@@ -277,6 +402,12 @@ function App() {
     setStatus('idle')
     setOrderStage('added')
     setCopiedPayment('')
+    
+    if (product?.accent === 'google') {
+      triggerHapticAndParticles(e, '#4285f4');
+    } else {
+      triggerHapticAndParticles(e, '#10a37f');
+    }
   }
 
   const openCart = () => {
@@ -295,7 +426,8 @@ function App() {
     setCopiedPayment('')
   }
 
-  const continueToForm = () => {
+  const continueToForm = (e) => {
+    triggerHapticAndParticles(e, '#8b7cff');
     setOrderStage('form')
     setStatus('idle')
   }
@@ -324,6 +456,7 @@ function App() {
   const continueToPayment = (event) => {
     event.preventDefault()
     if (!cart.length || status === 'sending') return
+    triggerHapticAndParticles(event, '#8b7cff');
     setOrderStage('payment')
     setStatus('idle')
     setCopiedPayment('')
@@ -354,6 +487,7 @@ function App() {
     event.preventDefault()
     if (!selectedProduct || status === 'sending') return
     setStatus('sending')
+    triggerHapticAndParticles(event, '#8b7cff')
 
     try {
       const response = await fetch('/api/sendMessage', {
@@ -375,6 +509,7 @@ function App() {
 
   return (
     <div className="site-shell">
+      <Atmosphere />
       <header className="site-header">
         <div className="container header-inner">
           <a href="/" className="brand" aria-label="NEO AI">
@@ -675,14 +810,81 @@ function ProductShowcase({ product, index, onOrder, revealDelay = 0 }) {
   const features = product.methods ? product.methods[0].features || [] : product.features;
   const description = product.description || 'فروشگاه دسترسی حرفه‌ای به ابزارهای هوش مصنوعی';
 
+  const ref = useRef(null);
+  const mouseX = useMotionValue(0.5);
+  const mouseY = useMotionValue(0.5);
+  const mouseXpx = useMotionValue(0);
+  const mouseYpx = useMotionValue(0);
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isTouch = typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
+
+  const springConfig = { damping: 25, stiffness: 200, mass: 0.5 };
+  const smoothX = useSpring(mouseX, springConfig);
+  const smoothY = useSpring(mouseY, springConfig);
+  const smoothXpx = useSpring(mouseXpx, springConfig);
+  const smoothYpx = useSpring(mouseYpx, springConfig);
+
+  const sheenX = useTransform(smoothX, [0, 1], ['-100%', '100%']);
+  const sheenY = useTransform(smoothY, [0, 1], ['-100%', '100%']);
+
+  const onMouseMove = (e) => {
+    if (reducedMotion || isTouch || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    mouseX.set(x);
+    mouseY.set(y);
+    mouseXpx.set(e.clientX - rect.left - 200); // 200 is half the glow width
+    mouseYpx.set(e.clientY - rect.top - 200);
+  };
+
+  const onMouseLeave = () => {
+    if (reducedMotion || isTouch) return;
+    mouseX.set(0.5);
+    mouseY.set(0.5);
+  };
+
+  const onMouseEnter = () => {
+    import('./components/ThreeDCard').catch(() => {});
+  };
+
+  const floatAnimation = isTouch && !reducedMotion ? {
+    y: [-4, 4, -4],
+    transition: { duration: 6, repeat: Infinity, ease: "easeInOut" }
+  } : {};
+
   return (
     <motion.article
+      ref={ref}
       layoutId={isMultiMethod ? `card-${product.id}` : undefined}
-      className={'product-showcase product-showcase-' + index}
+      className={`product-showcase product-showcase-${index} product-showcase-${product.accent}`}
       data-reveal
-      style={{ '--reveal-delay': `${revealDelay}ms` }}
+      style={{ 
+        '--reveal-delay': `${revealDelay}ms`
+      }}
+      animate={floatAnimation}
+      whileHover={reducedMotion || isTouch ? {} : { scale: 1.015, zIndex: 10 }}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
     >
-      <div className={'product-visual product-visual-' + product.accent}>
+      {!reducedMotion && !isTouch && (
+        <>
+          <div className="product-border-glow-wrapper" aria-hidden="true">
+            <motion.div 
+              className="product-border-glow"
+              style={{ x: smoothXpx, y: smoothYpx }}
+            />
+          </div>
+          <motion.div 
+            className="product-sheen" 
+            style={{ x: sheenX, y: sheenY }}
+            aria-hidden="true"
+          />
+        </>
+      )}
+      
+      <div className={`product-visual product-visual-${product.accent}`}>
         <div className="product-visual-glow" aria-hidden="true" />
         <div className="product-visual-top">
           <span>{String(index + 1).padStart(2, '0')}</span>
@@ -727,7 +929,7 @@ function ProductShowcase({ product, index, onOrder, revealDelay = 0 }) {
         </div>
         <div className="product-buy">
           <div><span>شروع قیمت از</span><strong>{formatMoney(lowestPrice, product.currency)}</strong></div>
-          <button className="button button-dark" onClick={() => onOrder(product)}>
+          <button className="button button-dark" onClick={(e) => onOrder(e, product)}>
             {isMultiMethod ? 'مشاهده روش‌ها' : 'افزودن به سبد'}<ArrowLeft size={17} />
           </button>
         </div>
@@ -754,8 +956,8 @@ function OrderModal({ product, method, isOpen, onClose, status, orderStage, cont
   if (!isOpen) return null
 
   return (
-    <div className="order-backdrop" onMouseDown={onClose}>
-      <div className="order-modal" role="dialog" aria-modal="true" aria-labelledby="order-title" onMouseDown={(event) => event.stopPropagation()}>
+    <div className="order-backdrop" onMouseDown={onClose} data-lenis-prevent>
+      <div className="order-modal" data-lenis-prevent role="dialog" aria-modal="true" aria-labelledby="order-title" onMouseDown={(event) => event.stopPropagation()}>
         <button className="order-close" onClick={onClose} aria-label="بستن"><X size={20} /></button>
 
         {status === 'success' ? (

@@ -1,5 +1,57 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { motion, AnimatePresence, useAnimation, useMotionValue } from 'framer-motion';
+
+const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+
+function OdometerDigit({ digit }) {
+  const y = Number(digit) * -10;
+  
+  return (
+    <span className="odometer-digit">
+      <motion.span 
+        initial={{ y: `${y}%` }}
+        animate={{ y: `${y}%` }} 
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        className="odometer-digit-col"
+      >
+        {persianDigits.map(d => <span key={d}>{d}</span>)}
+      </motion.span>
+    </span>
+  );
+}
+
+function OdometerPrice({ price }) {
+  const formatted = new Intl.NumberFormat('en-US').format(price);
+  
+  return (
+    <span className="odometer-price" dir="ltr">
+      {formatted.split('').map((char, i) => {
+        if (char === ',') return <span key={`comma-${i}`} className="odometer-comma">،</span>;
+        const distFromEnd = formatted.length - i; 
+        return <OdometerDigit key={`d-${distFromEnd}`} digit={char} />;
+      })}
+    </span>
+  );
+}
+import CSSCardFallback from './CSSCardFallback';
+
+const ThreeDCard = React.lazy(() => import('./ThreeDCard'));
+
+const check3DSupport = () => {
+  if (typeof window === 'undefined') return false;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+  if (navigator.connection && navigator.connection.saveData) return false;
+  if (navigator.deviceMemory && navigator.deviceMemory <= 2) return false;
+  if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) return false;
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) return false;
+  } catch (e) {
+    return false;
+  }
+  return true;
+};
 import { Check, X, ArrowLeft, ArrowDownLeft, ChevronDown, Sparkles } from 'lucide-react';
 import '../App.css'; // Assume styles are either in App.css or here
 
@@ -9,6 +61,21 @@ export default function MultiMethodProductModal({ product, isOpen, onClose, onPr
   const [selectedMethodId, setSelectedMethodId] = useState(null);
   const [helperState, setHelperState] = useState('idle'); // idle, q1, q2, result
   const [helperAnswers, setHelperAnswers] = useState({ budget: null, trial: null });
+  const [slideDir, setSlideDir] = useState(1);
+  const prevIndex = useRef(0);
+  
+  const [isMobile, setIsMobile] = useState(false);
+  const [canUse3D, setCanUse3D] = useState(false);
+  const controls = useAnimation();
+  const y = useMotionValue(0);
+
+  useEffect(() => {
+    setCanUse3D(check3DSupport());
+    const checkMobile = () => setIsMobile(window.innerWidth <= 700);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     if (isOpen && product) {
@@ -33,13 +100,21 @@ export default function MultiMethodProductModal({ product, isOpen, onClose, onPr
         newUrl.searchParams.set('method', initialMethod.id);
         window.history.replaceState({}, '', newUrl);
       }
+
+      if (isMobile) {
+        controls.start({ y: window.innerHeight * 0.32 }); // Start at ~60% snap point
+      }
     } else {
       setHelperState('idle');
       setHelperAnswers({ budget: null, trial: null });
     }
-  }, [isOpen, product]);
+  }, [isOpen, product, isMobile, controls]);
 
   const handleSelectMethod = (methodId) => {
+    const newIdx = product.methods.findIndex(m => m.id === methodId);
+    setSlideDir(newIdx >= prevIndex.current ? -1 : 1);
+    prevIndex.current = newIdx;
+    
     setSelectedMethodId(methodId);
     const newUrl = new URL(window.location);
     newUrl.searchParams.set('plan', product.id);
@@ -55,7 +130,25 @@ export default function MultiMethodProductModal({ product, isOpen, onClose, onPr
     newUrl.searchParams.delete('plan');
     newUrl.searchParams.delete('method');
     window.history.replaceState({}, '', newUrl);
-    onClose();
+    if (isMobile) {
+      controls.start({ y: window.innerHeight }).then(onClose);
+    } else {
+      onClose();
+    }
+  };
+
+  const handleDragEnd = (e, info) => {
+    const offset = info.offset.y;
+    const velocity = info.velocity.y;
+    const partialY = window.innerHeight * 0.32;
+
+    if (velocity > 400 || offset > partialY + 100) {
+      handleClose();
+    } else if (offset > partialY / 2 || velocity > 100) {
+      controls.start({ y: partialY, transition: { type: 'spring', damping: 25, stiffness: 200 } });
+    } else {
+      controls.start({ y: 0, transition: { type: 'spring', damping: 25, stiffness: 200 } });
+    }
   };
 
   if (!isOpen || !product) return null;
@@ -89,8 +182,24 @@ export default function MultiMethodProductModal({ product, isOpen, onClose, onPr
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } }
+  };
+  
+  const childVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { type: 'spring', damping: 25, stiffness: 200 } }
+  };
+
   return (
-    <div className="mm-backdrop" onClick={handleClose}>
+    <motion.div 
+      className="mm-backdrop"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={handleClose}
+    >
       <motion.div 
         className="mm-modal"
         layoutId={`card-${product.id}`}
@@ -98,12 +207,29 @@ export default function MultiMethodProductModal({ product, isOpen, onClose, onPr
         role="dialog"
         aria-modal="true"
         aria-labelledby="mm-title"
+        drag={isMobile ? "y" : false}
+        dragConstraints={{ top: 0, bottom: window.innerHeight }}
+        dragElastic={0.2}
+        onDragEnd={handleDragEnd}
+        animate={controls}
+        style={{ y: isMobile ? y : 0 }}
       >
+        {isMobile && <div className="mm-drag-handle" aria-hidden="true" />}
         <div className="mm-glow" style={{ background: `radial-gradient(circle at 50% -20%, ${product.brandColor}33 0%, transparent 60%)` }} />
         
         <button className="mm-close" onClick={handleClose} aria-label="بستن"><X size={20} /></button>
 
-        <div className="mm-header">
+        <div className="mm-hero-3d">
+          {canUse3D ? (
+             <Suspense fallback={<CSSCardFallback methodId={selectedMethod.id} accentColor={product.brandColor} />}>
+               <ThreeDCard methodId={selectedMethod.id} />
+             </Suspense>
+          ) : (
+             <CSSCardFallback methodId={selectedMethod.id} accentColor={product.brandColor} />
+          )}
+        </div>
+
+        <div className="mm-header" style={{ paddingTop: 16 }}>
           <motion.img 
             layoutId={`logo-${product.id}`} 
             src={product.logo} 
@@ -116,8 +242,13 @@ export default function MultiMethodProductModal({ product, isOpen, onClose, onPr
           </div>
         </div>
 
-        <div className="mm-body">
-          <div className="mm-selector" role="radiogroup" aria-label="روش‌های فعال‌سازی">
+        <motion.div 
+          className="mm-body"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div variants={childVariants} className="mm-selector" role="radiogroup" aria-label="روش‌های فعال‌سازی">
             {product.methods.map((method) => {
               const isSelected = method.id === selectedMethodId;
               return (
@@ -182,28 +313,48 @@ export default function MultiMethodProductModal({ product, isOpen, onClose, onPr
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
 
-          <div className="mm-detail-pane" aria-live="polite">
+          <motion.div variants={childVariants} className="mm-detail-pane" aria-live="polite">
+            <div className="mm-detail-header">
+              <div className="mm-detail-price">
+                <AnimatePresence mode="popLayout">
+                  {selectedMethod.originalPrice && (
+                    <motion.span 
+                      key="orig"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="mm-original-price"
+                    >
+                      {formatPrice(selectedMethod.originalPrice)} تومان
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+                <strong><OdometerPrice price={selectedMethod.price} /> <small>تومان</small></strong>
+              </div>
+              <AnimatePresence mode="wait">
+                <motion.span 
+                  key={selectedMethod.id} 
+                  initial={{ opacity: 0 }} 
+                  animate={{ opacity: 1 }} 
+                  exit={{ opacity: 0 }} 
+                  className="mm-detail-duration"
+                >
+                  {selectedMethod.duration}
+                </motion.span>
+              </AnimatePresence>
+            </div>
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={selectedMethod.id}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0, x: slideDir * 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: slideDir * -12 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
                 className="mm-detail-content"
               >
-                <div className="mm-detail-header">
-                  <div className="mm-detail-price">
-                    {selectedMethod.originalPrice && (
-                      <span className="mm-original-price">{formatPrice(selectedMethod.originalPrice)} تومان</span>
-                    )}
-                    <strong>{formatPrice(selectedMethod.price)} <small>تومان</small></strong>
-                  </div>
-                  <span className="mm-detail-duration">{selectedMethod.duration}</span>
-                </div>
-
                 <div className="mm-detail-grid">
                   <div className="mm-info-block">
                     <h4>نیاز از سمت شما:</h4>
@@ -246,17 +397,17 @@ export default function MultiMethodProductModal({ product, isOpen, onClose, onPr
 
             <button 
               className="button button-dark mm-cta"
-              onClick={() => {
+              onClick={(e) => {
                 if (window.dataLayer) window.dataLayer.push({ event: 'cta_click', methodId: selectedMethod.id, productId: product.id });
-                onProceedToOrder(product, selectedMethod);
+                onProceedToOrder(e, product, selectedMethod);
               }}
             >
               ثبت سفارش · {formatPrice(selectedMethod.price)} تومان
               <ArrowLeft size={18} />
             </button>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
