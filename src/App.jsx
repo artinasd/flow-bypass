@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowDownLeft, ArrowUpLeft, Check, ChevronDown, Minus, Plus, X, ArrowLeft, Sparkles, ShieldCheck, Copy } from 'lucide-react'
 import products from './products.json'
 import './App.css'
+import MultiMethodProductModal from './components/MultiMethodProductModal'
+import './components/MultiMethodProductModal.css'
 
 const formatPrice = (value) => new Intl.NumberFormat('fa-IR').format(value)
-const formatMoney = (product) => product?.currency === 'USD' ? '$' + product.price : `${formatPrice(product?.price)} تومان`
-const formatTotal = (product, total) => product?.currency === 'USD' ? `${total}` : `${formatPrice(total)} تومان`
+const formatMoney = (price, currency = 'IRR') => currency === 'USD' ? '$' + price : `${formatPrice(price)} تومان`
+const formatTotal = (price, currency = 'IRR') => currency === 'USD' ? `${price}` : `${formatPrice(price)} تومان`
 const CART_STORAGE_KEY = 'neo-ai-cart'
 const CART_TTL = 24 * 60 * 60 * 1000
 
@@ -14,7 +17,9 @@ const formatCardNumber = (value) => value.replace(/\D/g, '').replace(/(.{4})/g, 
 const formatCardDigits = (value) => value.replace(/\D/g, '').replace(/(.{4})/g, '$1\u00a0').trim()
 
 function App() {
-  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [selectedProduct, setSelectedProduct] = useState(null) // used for OrderModal
+  const [selectedMethod, setSelectedMethod] = useState(null) // selected method for OrderModal
+  const [multiMethodProduct, setMultiMethodProduct] = useState(null) // used for MultiMethodProductModal
   const [cart, setCart] = useState([])
   const [cartReady, setCartReady] = useState(false)
   const [form, setForm] = useState({ name: '', company: '', phone: '', email: '', notes: '' })
@@ -24,7 +29,11 @@ function App() {
 
   const cartProducts = useMemo(
     () => cart
-      .map((item) => ({ ...item, product: products.find((product) => product.id === item.productId) }))
+      .map((item) => {
+        const product = products.find((p) => p.id === item.productId);
+        const method = product?.methods?.find((m) => m.id === item.methodId) || product?.methods?.[0];
+        return { ...item, product, method };
+      })
       .filter((item) => item.product),
     [cart],
   )
@@ -35,13 +44,17 @@ function App() {
   )
 
   const total = useMemo(
-    () => cartProducts.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    () => cartProducts.reduce((sum, item) => {
+      const price = item.method ? item.method.price : (item.product.price || 0);
+      return sum + price * item.quantity;
+    }, 0),
     [cartProducts],
   )
 
   const closeOrder = useCallback(() => {
     if (status === 'sending') return
     setSelectedProduct(null)
+    setSelectedMethod(null)
     setStatus('idle')
     setOrderStage('added')
     setCopiedPayment('')
@@ -65,7 +78,11 @@ function App() {
 
       const validItems = stored.items
         .filter((item) => products.some((product) => product.id === item.productId))
-        .map((item) => ({ productId: item.productId, quantity: Math.min(99, Math.max(1, Number(item.quantity) || 1)) }))
+        .map((item) => ({ 
+          productId: item.productId, 
+          methodId: item.methodId,
+          quantity: Math.min(99, Math.max(1, Number(item.quantity) || 1)) 
+        }))
 
       setCart(validItems)
     } catch {
@@ -157,7 +174,7 @@ function App() {
               offers: {
                 '@type': 'Offer',
                 priceCurrency: product.currency === 'USD' ? 'USD' : 'IRR',
-                price: String(product.currency === 'USD' ? product.price : product.price * 10),
+                price: String(product.currency === 'USD' ? (product.methods?.[0]?.price || 0) : (product.methods?.[0]?.price || 0) * 10),
                 availability: 'https://schema.org/InStock',
               },
             },
@@ -231,17 +248,31 @@ function App() {
     return () => window.removeEventListener('keydown', handleEscape)
   }, [selectedProduct, closeOrder])
 
-  const openOrder = (product) => {
+  const handleProductAction = (product) => {
+    if (!product.methods || product.methods.length === 1) {
+      // Direct order flow
+      const method = product.methods ? product.methods[0] : null;
+      openOrder(product, method);
+    } else {
+      // Open multi-method panel
+      setMultiMethodProduct(product);
+      if (window.dataLayer) window.dataLayer.push({ event: 'panel_open', productId: product.id });
+    }
+  }
+
+  const openOrder = (product, method = null) => {
     setCart((current) => {
-      const existing = current.find((item) => item.productId === product.id)
+      const existing = current.find((item) => item.productId === product.id && item.methodId === method?.id)
       if (existing) {
-        return current.map((item) => item.productId === product.id
+        return current.map((item) => item.productId === product.id && item.methodId === method?.id
           ? { ...item, quantity: Math.min(99, item.quantity + 1) }
           : item)
       }
-      return [...current, { productId: product.id, quantity: 1 }]
+      return [...current, { productId: product.id, methodId: method?.id, quantity: 1 }]
     })
     setSelectedProduct(product)
+    setSelectedMethod(method)
+    setMultiMethodProduct(null)
     setForm({ name: '', company: '', phone: '', email: '', notes: '' })
     setStatus('idle')
     setOrderStage('added')
@@ -450,7 +481,7 @@ function App() {
                   key={product.id}
                   product={product}
                   index={index}
-                  onOrder={openOrder}
+                  onOrder={handleProductAction}
                   revealDelay={index * 70}
                 />
               ))}
@@ -601,6 +632,7 @@ function App() {
 
       <OrderModal
         product={selectedProduct}
+        method={selectedMethod}
         isOpen={!!selectedProduct}
         onClose={closeOrder}
         status={status}
@@ -621,13 +653,31 @@ function App() {
         copiedPayment={copiedPayment}
         copyPaymentValue={copyPaymentValue}
       />
+
+      <AnimatePresence>
+        {multiMethodProduct && (
+          <MultiMethodProductModal
+            key="mm-modal"
+            product={multiMethodProduct}
+            isOpen={!!multiMethodProduct}
+            onClose={() => setMultiMethodProduct(null)}
+            onProceedToOrder={openOrder}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
 function ProductShowcase({ product, index, onOrder, revealDelay = 0 }) {
+  const isMultiMethod = product.methods && product.methods.length > 1;
+  const lowestPrice = product.methods ? Math.min(...product.methods.map(m => m.price)) : product.price;
+  const features = product.methods ? product.methods[0].features || [] : product.features;
+  const description = product.description || 'فروشگاه دسترسی حرفه‌ای به ابزارهای هوش مصنوعی';
+
   return (
-    <article
+    <motion.article
+      layoutId={isMultiMethod ? `card-${product.id}` : undefined}
       className={'product-showcase product-showcase-' + index}
       data-reveal
       style={{ '--reveal-delay': `${revealDelay}ms` }}
@@ -639,17 +689,22 @@ function ProductShowcase({ product, index, onOrder, revealDelay = 0 }) {
           <span>{product.category}</span>
         </div>
         <div className="product-brand-mark">
-          <img
-            src={product.accent === 'google' ? '/google-gemini.svg' : '/openai-logo.svg'}
+          <motion.img
+            layoutId={isMultiMethod ? `logo-${product.id}` : undefined}
+            src={product.logo}
             alt=""
             className="product-brand-logo"
             loading="lazy"
             decoding="async"
           />
         </div>
-        <div className="product-visual-name">{product.provider}</div>
+        <div className="product-visual-name">
+          <motion.h3 layoutId={isMultiMethod ? `title-${product.id}` : undefined} style={{margin:0, fontSize:'inherit', fontWeight:'inherit'}}>
+            {product.name}
+          </motion.h3>
+        </div>
         <div className="product-visual-line" />
-        <span className="product-visual-caption">{product.featured ? 'FULL ACCESS / 01' : 'ESSENTIAL ACCESS / 01'}</span>
+        <span className="product-visual-caption">ESSENTIAL ACCESS / {String(index + 1).padStart(2, '0')}</span>
         <div className="visual-stack" aria-hidden="true">
           {product.accent === 'google' ? (
             <><span>GEMINI</span><span>FLOW</span><span>JULES</span><span>NOTEBOOKLM</span></>
@@ -659,11 +714,11 @@ function ProductShowcase({ product, index, onOrder, revealDelay = 0 }) {
         </div>
       </div>
       <div className="product-info">
-        <div className="product-meta"><span>{product.provider}</span><span>{product.badge}</span></div>
+        <div className="product-meta"><span>{product.provider}</span><span>{product.badge || (isMultiMethod ? 'چند روش' : '')}</span></div>
         <h3>{product.name}</h3>
-        <p>{product.description}</p>
+        <p>{description}</p>
         <div className="feature-rows">
-          {product.features.slice(0, 6).map((feature, featureIndex) => (
+          {features.slice(0, 6).map((feature, featureIndex) => (
             <div key={feature}>
               <span className="feature-number">{String(featureIndex + 1).padStart(2, '0')}</span>
               <Check size={15} /><span>{feature}</span>
@@ -671,14 +726,14 @@ function ProductShowcase({ product, index, onOrder, revealDelay = 0 }) {
           ))}
         </div>
         <div className="product-buy">
-          <div><span>قیمت / واحد</span><strong>{formatMoney(product)}</strong></div>
+          <div><span>شروع قیمت از</span><strong>{formatMoney(lowestPrice, product.currency)}</strong></div>
           <button className="button button-dark" onClick={() => onOrder(product)}>
-            {product.featured ? 'فعال‌سازی' : 'افزودن به سبد'}<ArrowLeft size={17} />
+            {isMultiMethod ? 'مشاهده روش‌ها' : 'افزودن به سبد'}<ArrowLeft size={17} />
           </button>
         </div>
         <div className="product-footnote"><span>DIRECT REQUEST</span><span>{String(index + 1).padStart(2, '0')} / {String(products.length).padStart(2, '0')}</span></div>
       </div>
-    </article>
+    </motion.article>
   )
 }
 
@@ -692,10 +747,10 @@ function FaqItem({ question, children }) {
 }
 
 function selectedCurrency(product, total) {
-  return formatTotal(product, total)
+  return formatTotal(total)
 }
 
-function OrderModal({ product, isOpen, onClose, status, orderStage, continueToForm, continueShopping, continueToPayment, backToForm, form, updateField, submitOrder, total, payment, copiedPayment, copyPaymentValue, cartProducts, cartCount, updateCartQuantity, removeFromCart }) {
+function OrderModal({ product, method, isOpen, onClose, status, orderStage, continueToForm, continueShopping, continueToPayment, backToForm, form, updateField, submitOrder, total, payment, copiedPayment, copyPaymentValue, cartProducts, cartCount, updateCartQuantity, removeFromCart }) {
   if (!isOpen) return null
 
   return (
@@ -721,13 +776,13 @@ function OrderModal({ product, isOpen, onClose, status, orderStage, continueToFo
                 <img src={product?.accent === 'google' ? '/google-gemini.svg' : '/openai-logo.svg'} alt="" />
               </div>
               <div>
-                <strong>{product?.name}</strong>
-                <span>{product?.provider} · {formatMoney(product)}</span>
+                <strong>{product?.name} {method ? `- ${method.label}` : ''}</strong>
+                <span>{product?.provider} · {formatMoney(method ? method.price : product?.price, product?.currency)}</span>
               </div>
             </div>
             <div className="cart-added-meta">
               <span>{formatPrice(cartCount)} محصول در سبد</span>
-              <strong>{formatTotal(product, total)}</strong>
+              <strong>{formatTotal(total, product?.currency)}</strong>
             </div>
             <p>می‌توانید محصولات بیشتری اضافه کنید یا سبد را برای تکمیل خرید باز کنید.</p>
             <div className="added-actions">
@@ -765,20 +820,20 @@ function OrderModal({ product, isOpen, onClose, status, orderStage, continueToFo
                       <img src={item.product.accent === 'google' ? '/google-gemini.svg' : '/openai-logo.svg'} alt="" />
                     </div>
                     <div>
-                      <strong>{item.product.name}</strong>
+                      <strong>{item.product.name} {item.method ? `- ${item.method.label}` : ''}</strong>
                       <span>{item.product.provider}</span>
                     </div>
                   </div>
                   <div className="cart-line-price">
-                    <span>{formatMoney(item.product)}</span>
-                    <strong>{formatTotal(item.product, item.product.price * item.quantity)}</strong>
+                    <span>{formatMoney(item.method ? item.method.price : item.product.price, item.product.currency)}</span>
+                    <strong>{formatTotal((item.method ? item.method.price : item.product.price) * item.quantity, item.product.currency)}</strong>
                   </div>
                   <div className="quantity-selector">
-                    <button type="button" onClick={() => updateCartQuantity(item.product.id, item.quantity - 1)} aria-label="کاهش تعداد"><Minus size={16} /></button>
+                    <button type="button" onClick={() => updateCartQuantity(item.product.id, item.method?.id, item.quantity - 1)} aria-label="کاهش تعداد"><Minus size={16} /></button>
                     <span>{formatPrice(item.quantity)}</span>
-                    <button type="button" onClick={() => updateCartQuantity(item.product.id, item.quantity + 1)} aria-label="افزایش تعداد"><Plus size={16} /></button>
+                    <button type="button" onClick={() => updateCartQuantity(item.product.id, item.method?.id, item.quantity + 1)} aria-label="افزایش تعداد"><Plus size={16} /></button>
                   </div>
-                  <button className="cart-remove" type="button" onClick={() => removeFromCart(item.product.id)} aria-label="حذف محصول"><X size={15} /></button>
+                  <button className="cart-remove" type="button" onClick={() => removeFromCart(item.product.id, item.method?.id)} aria-label="حذف محصول"><X size={15} /></button>
                 </div>
               ))}
             </div>
@@ -814,21 +869,21 @@ function OrderModal({ product, isOpen, onClose, status, orderStage, continueToFo
                       <span className="copy-action">{copiedPayment === 'card' ? <><Check size={15} /> کپی شد</> : <><Copy size={15} /> کپی</>}</span>
                     </button>
                     <button type="button" className="payment-copy payment-amount-copy" onClick={() => copyPaymentValue('amount', String(total))}>
-                      <span><span className="payment-copy-label">مبلغ دقیق انتقال</span><strong>{formatTotal(cartProducts[0]?.product, total)}</strong></span>
+                      <span><span className="payment-copy-label">مبلغ دقیق انتقال</span><strong>{formatTotal(total, cartProducts[0]?.product?.currency)}</strong></span>
                       <span className="copy-action">{copiedPayment === 'amount' ? <><Check size={15} /> کپی شد</> : <><Copy size={15} /> کپی مبلغ</>}</span>
                     </button>
                   </div>
 
                   <div className="payment-note">
                     <span className="payment-note-mark"><Check size={14} /></span>
-                    <p>پس از انتقال <strong>{formatTotal(cartProducts[0]?.product, total)}</strong> به کارت بالا، روی «پرداخت کردم، ثبت سفارش» بزنید. پرداخت شما در این مرحله به‌صورت دستی بررسی می‌شود.</p>
+                    <p>پس از انتقال <strong>{formatTotal(total, cartProducts[0]?.product?.currency)}</strong> به کارت بالا، روی «پرداخت کردم، ثبت سفارش» بزنید. پرداخت شما در این مرحله به‌صورت دستی بررسی می‌شود.</p>
                   </div>
                 </div>
 
                 {status === 'error' && <div className="order-error" role="alert">ارسال سفارش انجام نشد. لطفاً دوباره تلاش کنید.</div>}
 
                 <div className="order-submit">
-                  <div><span>مجموع</span><strong>{formatTotal(cartProducts[0]?.product, total)}</strong></div>
+                  <div><span>مجموع</span><strong>{formatTotal(total, cartProducts[0]?.product?.currency)}</strong></div>
                   <button className="button button-dark order-payment-submit" disabled={status === 'sending'} type="button" onClick={submitOrder}>
                     {status === 'sending' ? 'در حال ثبت...' : 'پرداخت کردم، ثبت سفارش'}
                     {status !== 'sending' && <ArrowLeft size={17} />}
@@ -861,7 +916,7 @@ function OrderModal({ product, isOpen, onClose, status, orderStage, continueToFo
                 </label>
 
                 <div className="order-submit">
-                  <div><span>مجموع سفارش</span><strong>{formatTotal(cartProducts[0]?.product, total)}</strong></div>
+                  <div><span>مجموع سفارش</span><strong>{formatTotal(total, cartProducts[0]?.product?.currency)}</strong></div>
                   <button className="button button-dark order-payment-submit" type="submit">
                     ادامه به پرداخت
                     <ArrowLeft size={17} />
