@@ -6,9 +6,9 @@ const json = (res, status, body) => res.status(status).json(body)
 
 const loadProducts = () => JSON.parse(fs.readFileSync(PRODUCTS_PATH, 'utf8'))
 
-const formatPrice = (product) => {
-  if (product.currency === 'USD') return `$${product.price}`
-  return `${new Intl.NumberFormat('fa-IR').format(product.price)} تومان`
+const formatPrice = (method) => {
+  if (method.currency === 'USD') return `$${method.price}`
+  return `${new Intl.NumberFormat('fa-IR').format(method.price || 0)} تومان`
 }
 
 const telegramRequest = async (token, method, body) => {
@@ -65,7 +65,7 @@ const saveCatalog = async (githubToken, repository, branch, products, sha) => {
     `/repos/${repository}/contents/${encodedPath}`,
     githubToken,
     {
-      message: 'Update product prices from Telegram',
+      message: 'Update products via Telegram Bot',
       content: Buffer.from(`${JSON.stringify(products, null, 2)}\n`).toString('base64'),
       sha,
       branch,
@@ -74,30 +74,45 @@ const saveCatalog = async (githubToken, repository, branch, products, sha) => {
 }
 
 const findProduct = (products, id) => products.find((product) => product.id === id)
+const findMethod = (product, id) => product?.methods?.find((method) => method.id === id)
 
 const productListText = (products) => [
-  '💰 قیمت‌های فعلی',
+  '💰 محصولات و قیمت‌ها',
   '',
   ...products.map((product) => {
-    const discount = product.originalPrice && product.originalPrice !== product.price
-      ? ` — قیمت اصلی: ${formatPrice({ ...product, price: product.originalPrice })}`
-      : ''
-    return `• ${product.id}\n  ${product.name}: ${formatPrice(product)}${discount}`
+    const methodsText = product.methods?.map(method => {
+      const discount = method.originalPrice && method.originalPrice !== method.price
+        ? ` — اصلی: ${formatPrice({ ...method, price: method.originalPrice })}`
+        : ''
+      return `  • ${method.id} (${method.label}): ${formatPrice(method)}${discount}`
+    }).join('\n') || '  بدون متد'
+    return `📦 ${product.id} (${product.name})\n${methodsText}`
   }),
 ].join('\n')
 
 const helpText = [
-  '🛠 مدیریت قیمت‌ها',
+  '🛠 مدیریت محصولات و قیمت‌ها',
   '',
-  '/prices — نمایش قیمت‌های فعلی',
-  '/setprice ID PRICE — تعیین قیمت جدید',
-  '/discount ID PERCENT — اعمال تخفیف',
-  '/resetprice ID — بازگرداندن قیمت اصلی',
+  '📦 مدیریت قیمت و تخفیف:',
+  '/prices — نمایش محصولات و قیمت‌های فعلی',
+  '/setprice PRODUCT_ID METHOD_ID PRICE — تعیین قیمت',
+  '/discount PRODUCT_ID METHOD_ID PERCENT — اعمال تخفیف',
+  '/resetprice PRODUCT_ID METHOD_ID — بازگرداندن قیمت اصلی',
   '',
-  'مثال:',
-  '/setprice google-ai-pro-exclusive 550000',
-  '/discount google-ai-pro-exclusive 15',
-  '/resetprice google-ai-pro-exclusive',
+  '🛒 مدیریت محصولات:',
+  '/addproduct ID NAME PROVIDER CATEGORY — افزودن محصول جدید',
+  '/editproduct ID FIELD VALUE — ویرایش محصول (name, provider, category, logo, brandColor, accent)',
+  '/delproduct ID — حذف محصول',
+  '',
+  '⚙️ مدیریت متدها (روش‌های خرید):',
+  '/addmethod PRODUCT_ID METHOD_ID LABEL PRICE — افزودن متد',
+  '/editmethod PRODUCT_ID METHOD_ID FIELD VALUE — ویرایش متد (label, tag, price, duration, deliveryTime, recommended)',
+  '/delmethod PRODUCT_ID METHOD_ID — حذف متد',
+  '',
+  'مثال‌ها:',
+  '/setprice google-ai-pro exclusive 550000',
+  '/addproduct spotify Spotify Spotify "موزیک"',
+  '/addmethod spotify premium "اکانت پرمیوم" 150000',
 ].join('\n')
 
 export default async function handler(req, res) {
@@ -141,86 +156,216 @@ export default async function handler(req, res) {
     }
 
     if (normalizedCommand === '/setprice') {
-      const [id, rawPrice] = args
+      const [productId, methodId, rawPrice] = args
       const price = Number(rawPrice)
-      if (!id || !Number.isFinite(price) || price <= 0 || !Number.isInteger(price)) {
-        await sendTelegramMessage(token, chatId, '❌ فرمت نادرست است.\nمثال: /setprice google-ai-pro-exclusive 550000')
+      if (!productId || !methodId || !Number.isFinite(price) || price <= 0 || !Number.isInteger(price)) {
+        await sendTelegramMessage(token, chatId, '❌ فرمت نادرست است.\nمثال: /setprice google-ai-pro exclusive 550000')
         return json(res, 200, { ok: true })
       }
 
       const catalog = await getCatalog(githubToken, repository, branch)
-      const product = findProduct(catalog.products, id)
-      if (!product) {
-        await sendTelegramMessage(token, chatId, `❌ محصول پیدا نشد: ${id}`)
+      const product = findProduct(catalog.products, productId)
+      const method = findMethod(product, methodId)
+      
+      if (!method) {
+        await sendTelegramMessage(token, chatId, `❌ محصول یا متد پیدا نشد.`)
         return json(res, 200, { ok: true })
       }
 
-      product.price = price
-      product.originalPrice = price
-      delete product.discountPercent
+      method.price = price
+      method.originalPrice = price
+      delete method.discountPercent
       await saveCatalog(githubToken, repository, branch, catalog.products, catalog.sha)
 
-      await sendTelegramMessage(
-        token,
-        chatId,
-        `✅ قیمت ${product.name} به ${formatPrice(product)} تغییر کرد.\n\nVercel پس از commit جدید، سایت را دوباره deploy می‌کند.`,
-      )
+      await sendTelegramMessage(token, chatId, `✅ قیمت ${product.name} (${method.label}) تغییر کرد.`)
       return json(res, 200, { ok: true })
     }
 
     if (normalizedCommand === '/discount') {
-      const [id, rawPercent] = args
+      const [productId, methodId, rawPercent] = args
       const percent = Number(rawPercent)
-      if (!id || !Number.isFinite(percent) || percent < 0 || percent >= 100) {
-        await sendTelegramMessage(token, chatId, '❌ درصد تخفیف باید بین ۰ تا ۹۹ باشد.\nمثال: /discount google-ai-pro-exclusive 15')
+      if (!productId || !methodId || !Number.isFinite(percent) || percent < 0 || percent >= 100) {
+        await sendTelegramMessage(token, chatId, '❌ فرمت نادرست است.\nمثال: /discount google-ai-pro exclusive 15')
         return json(res, 200, { ok: true })
       }
 
       const catalog = await getCatalog(githubToken, repository, branch)
-      const product = findProduct(catalog.products, id)
-      if (!product) {
-        await sendTelegramMessage(token, chatId, `❌ محصول پیدا نشد: ${id}`)
+      const product = findProduct(catalog.products, productId)
+      const method = findMethod(product, methodId)
+      
+      if (!method) {
+        await sendTelegramMessage(token, chatId, `❌ محصول یا متد پیدا نشد.`)
         return json(res, 200, { ok: true })
       }
 
-      const originalPrice = Number(product.originalPrice || product.price)
-      product.originalPrice = originalPrice
-      product.price = Math.max(1, Math.round(originalPrice * (1 - percent / 100)))
-      product.discountPercent = percent
+      const originalPrice = Number(method.originalPrice || method.price)
+      method.originalPrice = originalPrice
+      method.price = Math.max(1, Math.round(originalPrice * (1 - percent / 100)))
+      method.discountPercent = percent
       await saveCatalog(githubToken, repository, branch, catalog.products, catalog.sha)
 
-      await sendTelegramMessage(
-        token,
-        chatId,
-        `🏷️ تخفیف ${percent}% روی ${product.name} اعمال شد.\nقیمت جدید: ${formatPrice(product)}\nقیمت اصلی: ${formatPrice({ ...product, price: originalPrice })}\n\nVercel پس از commit جدید، سایت را دوباره deploy می‌کند.`,
-      )
+      await sendTelegramMessage(token, chatId, `🏷️ تخفیف ${percent}% روی ${product.name} (${method.label}) اعمال شد.\nقیمت جدید: ${formatPrice(method)}\nقیمت اصلی: ${formatPrice({ ...method, price: originalPrice })}`)
       return json(res, 200, { ok: true })
     }
 
     if (normalizedCommand === '/resetprice') {
-      const [id] = args
+      const [productId, methodId] = args
+      const catalog = await getCatalog(githubToken, repository, branch)
+      const product = findProduct(catalog.products, productId)
+      const method = findMethod(product, methodId)
+      
+      if (!method) {
+        await sendTelegramMessage(token, chatId, `❌ محصول یا متد پیدا نشد.`)
+        return json(res, 200, { ok: true })
+      }
+
+      const originalPrice = Number(method.originalPrice)
+      if (!Number.isFinite(originalPrice) || originalPrice <= 0) {
+        await sendTelegramMessage(token, chatId, '❌ این متد قیمت اصلی قابل بازیابی ندارد.')
+        return json(res, 200, { ok: true })
+      }
+
+      method.price = originalPrice
+      delete method.discountPercent
+      await saveCatalog(githubToken, repository, branch, catalog.products, catalog.sha)
+
+      await sendTelegramMessage(token, chatId, `↩️ قیمت ${product.name} (${method.label}) به ${formatPrice(method)} بازگردانده شد.`)
+      return json(res, 200, { ok: true })
+    }
+
+    if (normalizedCommand === '/addproduct') {
+      const [id, name, provider, ...categoryParts] = args
+      const category = categoryParts.join(' ')
+      if (!id || !name || !provider || !category) {
+        await sendTelegramMessage(token, chatId, '❌ فرمت: /addproduct ID NAME PROVIDER CATEGORY')
+        return json(res, 200, { ok: true })
+      }
+      const catalog = await getCatalog(githubToken, repository, branch)
+      if (findProduct(catalog.products, id)) {
+        await sendTelegramMessage(token, chatId, '❌ محصولی با این ID وجود دارد.')
+        return json(res, 200, { ok: true })
+      }
+      catalog.products.push({ id, name, provider, category, methods: [] })
+      await saveCatalog(githubToken, repository, branch, catalog.products, catalog.sha)
+      await sendTelegramMessage(token, chatId, `✅ محصول ${name} افزوده شد.`)
+      return json(res, 200, { ok: true })
+    }
+
+    if (normalizedCommand === '/editproduct') {
+      const [id, field, ...valueParts] = args
+      let value = valueParts.join(' ')
+      if (!id || !field || value === '') {
+        await sendTelegramMessage(token, chatId, '❌ فرمت: /editproduct ID FIELD VALUE')
+        return json(res, 200, { ok: true })
+      }
+      const validFields = ['name', 'provider', 'category', 'logo', 'brandColor', 'accent']
+      if (!validFields.includes(field)) {
+        await sendTelegramMessage(token, chatId, `❌ فیلد نامعتبر. مجاز: ${validFields.join(', ')}`)
+        return json(res, 200, { ok: true })
+      }
       const catalog = await getCatalog(githubToken, repository, branch)
       const product = findProduct(catalog.products, id)
       if (!product) {
-        await sendTelegramMessage(token, chatId, `❌ محصول پیدا نشد: ${id}`)
+        await sendTelegramMessage(token, chatId, '❌ محصول پیدا نشد.')
         return json(res, 200, { ok: true })
       }
-
-      const originalPrice = Number(product.originalPrice)
-      if (!Number.isFinite(originalPrice) || originalPrice <= 0) {
-        await sendTelegramMessage(token, chatId, '❌ این محصول قیمت اصلی قابل بازیابی ندارد.')
-        return json(res, 200, { ok: true })
-      }
-
-      product.price = originalPrice
-      delete product.discountPercent
+      product[field] = value
       await saveCatalog(githubToken, repository, branch, catalog.products, catalog.sha)
+      await sendTelegramMessage(token, chatId, `✅ فیلد ${field} در محصول ${product.name} ویرایش شد.`)
+      return json(res, 200, { ok: true })
+    }
 
-      await sendTelegramMessage(
-        token,
-        chatId,
-        `↩️ قیمت ${product.name} به ${formatPrice(product)} بازگردانده شد.\n\nVercel پس از commit جدید، سایت را دوباره deploy می‌کند.`,
-      )
+    if (normalizedCommand === '/delproduct') {
+      const [id] = args
+      if (!id) {
+        await sendTelegramMessage(token, chatId, '❌ فرمت: /delproduct ID')
+        return json(res, 200, { ok: true })
+      }
+      const catalog = await getCatalog(githubToken, repository, branch)
+      const initialLength = catalog.products.length
+      catalog.products = catalog.products.filter(p => p.id !== id)
+      if (catalog.products.length === initialLength) {
+        await sendTelegramMessage(token, chatId, '❌ محصول پیدا نشد.')
+        return json(res, 200, { ok: true })
+      }
+      await saveCatalog(githubToken, repository, branch, catalog.products, catalog.sha)
+      await sendTelegramMessage(token, chatId, `✅ محصول ${id} حذف شد.`)
+      return json(res, 200, { ok: true })
+    }
+
+    if (normalizedCommand === '/addmethod') {
+      const [productId, methodId, label, rawPrice] = args
+      const price = Number(rawPrice)
+      if (!productId || !methodId || !label || !Number.isFinite(price)) {
+        await sendTelegramMessage(token, chatId, '❌ فرمت: /addmethod PRODUCT_ID METHOD_ID LABEL PRICE')
+        return json(res, 200, { ok: true })
+      }
+      const catalog = await getCatalog(githubToken, repository, branch)
+      const product = findProduct(catalog.products, productId)
+      if (!product) {
+        await sendTelegramMessage(token, chatId, '❌ محصول پیدا نشد.')
+        return json(res, 200, { ok: true })
+      }
+      if (!product.methods) product.methods = []
+      if (findMethod(product, methodId)) {
+        await sendTelegramMessage(token, chatId, '❌ این متد قبلاً وجود دارد.')
+        return json(res, 200, { ok: true })
+      }
+      product.methods.push({ id: methodId, label, price, originalPrice: price, requirements: [], steps: [], notes: [], features: [] })
+      await saveCatalog(githubToken, repository, branch, catalog.products, catalog.sha)
+      await sendTelegramMessage(token, chatId, `✅ متد ${methodId} به محصول ${product.name} افزوده شد.`)
+      return json(res, 200, { ok: true })
+    }
+
+    if (normalizedCommand === '/editmethod') {
+      const [productId, methodId, field, ...valueParts] = args
+      let value = valueParts.join(' ')
+      if (!productId || !methodId || !field || value === '') {
+        await sendTelegramMessage(token, chatId, '❌ فرمت: /editmethod PRODUCT_ID METHOD_ID FIELD VALUE')
+        return json(res, 200, { ok: true })
+      }
+      const validFields = ['label', 'tag', 'price', 'duration', 'deliveryTime', 'recommended']
+      if (!validFields.includes(field)) {
+        await sendTelegramMessage(token, chatId, `❌ فیلد نامعتبر. مجاز: ${validFields.join(', ')}`)
+        return json(res, 200, { ok: true })
+      }
+      const catalog = await getCatalog(githubToken, repository, branch)
+      const product = findProduct(catalog.products, productId)
+      const method = findMethod(product, methodId)
+      if (!method) {
+        await sendTelegramMessage(token, chatId, '❌ محصول یا متد پیدا نشد.')
+        return json(res, 200, { ok: true })
+      }
+      
+      if (field === 'price') value = Number(value)
+      else if (field === 'recommended') value = value.toLowerCase() === 'true'
+      
+      method[field] = value
+      await saveCatalog(githubToken, repository, branch, catalog.products, catalog.sha)
+      await sendTelegramMessage(token, chatId, `✅ فیلد ${field} در متد ${method.label} ویرایش شد.`)
+      return json(res, 200, { ok: true })
+    }
+
+    if (normalizedCommand === '/delmethod') {
+      const [productId, methodId] = args
+      if (!productId || !methodId) {
+        await sendTelegramMessage(token, chatId, '❌ فرمت: /delmethod PRODUCT_ID METHOD_ID')
+        return json(res, 200, { ok: true })
+      }
+      const catalog = await getCatalog(githubToken, repository, branch)
+      const product = findProduct(catalog.products, productId)
+      if (!product || !product.methods) {
+        await sendTelegramMessage(token, chatId, '❌ محصول پیدا نشد.')
+        return json(res, 200, { ok: true })
+      }
+      const initialLength = product.methods.length
+      product.methods = product.methods.filter(m => m.id !== methodId)
+      if (product.methods.length === initialLength) {
+        await sendTelegramMessage(token, chatId, '❌ متد پیدا نشد.')
+        return json(res, 200, { ok: true })
+      }
+      await saveCatalog(githubToken, repository, branch, catalog.products, catalog.sha)
+      await sendTelegramMessage(token, chatId, `✅ متد ${methodId} از محصول ${product.name} حذف شد.`)
       return json(res, 200, { ok: true })
     }
 
@@ -229,7 +374,7 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('Telegram admin error:', error)
     try {
-      await sendTelegramMessage(token, chatId, '❌ خطا در به‌روزرسانی قیمت. جزئیات در لاگ Vercel ثبت شده است.')
+      await sendTelegramMessage(token, chatId, '❌ خطا در پردازش درخواست. لاگ‌ها را بررسی کنید.')
     } catch {}
     return json(res, 500, { error: 'Telegram admin operation failed.' })
   }
